@@ -20,7 +20,7 @@ class PromoBanner extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Container(
-        height: 170,
+        height: 185,
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(28),
           gradient: LinearGradient(
@@ -53,7 +53,7 @@ class PromoBanner extends StatelessWidget {
                   Expanded(
                     flex: 13,
                     child: Padding(
-                      padding: const EdgeInsets.all(22.0),
+                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -66,19 +66,30 @@ class PromoBanner extends StatelessWidget {
                             ),
                             child: Text(
                               isArabic ? "عروض حصرية" : "Exclusive Offers",
-                              style: const TextStyle(color: AppColors.accentGold, fontSize: 11, fontWeight: FontWeight.bold, fontFamily: 'Cairo'),
+                              style: const TextStyle(
+                                  color: AppColors.accentGold,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.bold,
+                                  fontFamily: 'Cairo'
+                              ),
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: 6),
                           Text(
                             isArabic
                                 ? "أحدث الأجهزة\nبأفضل الأسعار المنافسة"
                                 : "Latest Devices\nwith Best Prices",
-                            style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold, fontFamily: 'Cairo', height: 1.3),
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold,
+                                fontFamily: 'Cairo',
+                                height: 1.25
+                            ),
                           ),
-                          const SizedBox(height: 14),
+                          const SizedBox(height: 10),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 6),
                             decoration: BoxDecoration(
                                 color: AppColors.accentGreen,
                                 borderRadius: BorderRadius.circular(16),
@@ -92,7 +103,12 @@ class PromoBanner extends StatelessWidget {
                             ),
                             child: Text(
                               isArabic ? "تسوق الآن" : "Shop Now",
-                              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 11, fontFamily: 'Cairo'),
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 11,
+                                  fontFamily: 'Cairo'
+                              ),
                             ),
                           ),
                         ],
@@ -102,7 +118,7 @@ class PromoBanner extends StatelessWidget {
                   Expanded(
                     flex: 9,
                     child: Padding(
-                      padding: const EdgeInsets.only(left: 16.0, top: 16.0, bottom: 16.0),
+                      padding: const EdgeInsets.all(12.0),
                       child: Hero(
                         tag: 'promo_iphone',
                         child: Image.network(
