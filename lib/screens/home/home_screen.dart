@@ -7,6 +7,7 @@ import 'widgets/categories_list.dart';
 import 'widgets/services_section.dart';
 import 'widgets/track_order_card.dart';
 import 'widgets/featured_products.dart';
+import '../product/products_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -152,9 +153,25 @@ class _HomeScreenState extends State<HomeScreen> {
         child: BottomNavigationBar(
           currentIndex: _currentIndex,
           onTap: (index) {
-            setState(() {
-              _currentIndex = index;
-            });
+            if (index == 2) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => ProductsScreen(
+                    isDarkMode: isDarkMode,
+                    currentLocale: currentLocale,
+                  ),
+                ),
+              ).then((_) {
+                setState(() {
+                  _currentIndex = 0;
+                });
+              });
+            } else {
+              setState(() {
+                _currentIndex = index;
+              });
+            }
           },
           type: BottomNavigationBarType.fixed,
           backgroundColor: Colors.transparent,
