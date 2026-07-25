@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import 'product_details_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -297,6 +298,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }) {
     return GestureDetector(
       onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => ProductDetailsScreen(
+              product: product,
+              isDarkMode: isDarkMode,
+              currentLocale: currentLocale,
+            ),
+          ),
+        );
       },
       child: Container(
         decoration: BoxDecoration(
