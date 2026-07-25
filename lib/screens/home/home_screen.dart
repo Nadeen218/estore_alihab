@@ -88,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
                 // 4. التصنيفات
                 CategoriesList(
+                  isDarkMode: isDarkMode,
                   cardBg: cardColor,
                   textMain: textColor,
                   textSub: textMutedColor,
