@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import '../../cart/cart_screen.dart';
+//import '../auth/login_screen.dart';
+//import '../auth/register_screen.dart';
 
 class HomeHeader extends StatelessWidget {
   final bool isDarkMode;
@@ -16,6 +19,138 @@ class HomeHeader extends StatelessWidget {
     required this.textMain,
     required this.textSub,
   }) : super(key: key);
+
+  void _handleCartClick(BuildContext context) {
+    bool isLoggedIn = false;
+
+    if (isLoggedIn) {
+      // الانتقال للسلة في حال كان مسجلاً
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (context) => CartScreen(
+            isDarkMode: isDarkMode,
+            currentLocale: 'ar',
+          ),
+        ),
+      );
+    } else {
+      // إظهار نافذة التنبيه لاختيار الدخول أو التسجيل
+      _showAuthRequiredDialog(context);
+    }
+  }
+
+  void _showAuthRequiredDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: isDarkMode ? AppColors.darkBackgroundSecondary : AppColors.lightBackgroundSecondary,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: Column(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.accentBlue.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.lock_outline_rounded,
+                size: 36,
+                color: AppColors.accentBlue,
+              ),
+            ),
+            const SizedBox(height: 12),
+            Text(
+              "تسجيل الدخول مطلوب",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
+                fontFamily: 'Cairo',
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+              ),
+            ),
+          ],
+        ),
+        content: Text(
+          "للوصول إلى سلة التسوق وإتمام عملية الشراء، يرجى تسجيل الدخول أو إنشاء حساب جديد.",
+          textAlign: TextAlign.center,
+          style: TextStyle(
+            color: isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            fontFamily: 'Cairo',
+            fontSize: 13,
+            height: 1.5,
+          ),
+        ),
+        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+        actions: [
+          Row(
+            children: [
+              // زر إنشاء حساب
+              Expanded(
+                child: OutlinedButton(
+                  style: OutlinedButton.styleFrom(
+                    side: const BorderSide(color: AppColors.accentBlue),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                  ),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                   /* Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const RegisterScreen(),
+                      ),
+                    );*/
+                  },
+                  child: const Text(
+                    "حساب جديد",
+                    style: TextStyle(
+                      color: AppColors.accentBlue,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              // زر تسجيل الدخول
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.accentBlue,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                    padding: const EdgeInsets.symmetric(vertical: 10),
+                    elevation: 0,
+                  ),
+                  onPressed: () {
+                    Navigator.pop(dialogContext);
+                    //Navigator.push(
+                     // context,
+                     // MaterialPageRoute(
+                      //  builder: (context) => const LoginScreen(),
+                      //),
+                   // );
+                  },
+                  child: const Text(
+                    "تسجيل الدخول",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontFamily: 'Cairo',
+                      fontWeight: FontWeight.bold,
+                      fontSize: 13,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -91,38 +226,41 @@ class HomeHeader extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 10),
-          // سلة التسوق
-          Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  color: cardBg,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: textMain.withOpacity(0.08), width: 1),
-                ),
-                child: Icon(Icons.shopping_bag_outlined, color: textMain, size: 20),
-              ),
-              Positioned(
-                top: -1,
-                left: -1,
-                child: Container(
-                  padding: const EdgeInsets.all(5),
-                  decoration: const BoxDecoration(
-                    color: AppColors.accentGreen,
+          // سلة التسوق (تمت إضافة الضغط والتفعيل هنا)
+          GestureDetector(
+            onTap: () => _handleCartClick(context),
+            child: Stack(
+              clipBehavior: Clip.none,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: cardBg,
                     shape: BoxShape.circle,
+                    border: Border.all(color: textMain.withOpacity(0.08), width: 1),
                   ),
-                  constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                  child: const Center(
-                    child: Text(
-                      "2",
-                      style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold, height: 1),
+                  child: Icon(Icons.shopping_bag_outlined, color: textMain, size: 20),
+                ),
+                Positioned(
+                  top: -1,
+                  left: -1,
+                  child: Container(
+                    padding: const EdgeInsets.all(5),
+                    decoration: const BoxDecoration(
+                      color: AppColors.accentGreen,
+                      shape: BoxShape.circle,
+                    ),
+                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                    child: const Center(
+                      child: Text(
+                        "2",
+                        style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold, height: 1),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
