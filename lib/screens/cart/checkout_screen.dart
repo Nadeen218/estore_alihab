@@ -1,5 +1,3 @@
-// lib/cart/checkout_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 

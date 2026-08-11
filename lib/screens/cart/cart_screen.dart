@@ -1,7 +1,6 @@
-// lib/cart/cart_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import 'checkout_screen.dart';
 
 class CartScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -434,7 +433,17 @@ class _CartScreenState extends State<CartScreen> {
                   elevation: 0,
                 ),
                 onPressed: () {
-                  //  CheckoutScreen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => CheckoutScreen(
+                        isDarkMode: widget.isDarkMode,
+                        currentLocale: widget.currentLocale,
+                        subtotal: subtotal,
+                        deliveryFee: deliveryFee,
+                      ),
+                    ),
+                  );
                 },
                 child: Text(
                   isArabic ? "المتابعة لإتمام الطلب" : "Proceed to Checkout",
