@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import '../../cart/cart_screen.dart';
-//import '../auth/login_screen.dart';
-//import '../auth/register_screen.dart';
+import '../../auth/login_screen.dart';
+import '../../auth/register_screen.dart';
 
-class HomeHeader extends StatelessWidget {
+class HomeHeader extends StatefulWidget {
   final bool isDarkMode;
   final VoidCallback onThemeToggle;
   final Color cardBg;
@@ -20,31 +20,42 @@ class HomeHeader extends StatelessWidget {
     required this.textSub,
   }) : super(key: key);
 
-  void _handleCartClick(BuildContext context) {
-    bool isLoggedIn = false;
+  @override
+  State<HomeHeader> createState() => _HomeHeaderState();
+}
 
-    if (isLoggedIn) {
-      // الانتقال للسلة في حال كان مسجلاً
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (context) => CartScreen(
-            isDarkMode: isDarkMode,
-            currentLocale: 'ar',
-          ),
+class _HomeHeaderState extends State<HomeHeader> {
+  bool _isLoggedIn = false;
+
+  void _navigateToCart(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => CartScreen(
+          isDarkMode: widget.isDarkMode,
+          currentLocale: 'ar',
         ),
-      );
+      ),
+    );
+  }
+
+  void _handleCartClick(BuildContext context) {
+    if (_isLoggedIn) {
+      // إذا كان مسجلاً -> افتح السلة فوراً
+      _navigateToCart(context);
     } else {
-      // إظهار نافذة التنبيه لاختيار الدخول أو التسجيل
+      // إذا لم يكن مسجلاً -> أظهر النافذة
       _showAuthRequiredDialog(context);
     }
   }
 
-  void _showAuthRequiredDialog(BuildContext context) {
+  void _showAuthRequiredDialog(BuildContext parentContext) {
     showDialog(
-      context: context,
+      context: parentContext,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDarkMode ? AppColors.darkBackgroundSecondary : AppColors.lightBackgroundSecondary,
+        backgroundColor: widget.isDarkMode
+            ? AppColors.darkBackgroundSecondary
+            : AppColors.lightBackgroundSecondary,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
         title: Column(
           children: [
@@ -65,7 +76,7 @@ class HomeHeader extends StatelessWidget {
               "تسجيل الدخول مطلوب",
               textAlign: TextAlign.center,
               style: TextStyle(
-                color: isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
+                color: widget.isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
                 fontFamily: 'Cairo',
                 fontWeight: FontWeight.bold,
                 fontSize: 18,
@@ -77,7 +88,7 @@ class HomeHeader extends StatelessWidget {
           "للوصول إلى سلة التسوق وإتمام عملية الشراء، يرجى تسجيل الدخول أو إنشاء حساب جديد.",
           textAlign: TextAlign.center,
           style: TextStyle(
-            color: isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+            color: widget.isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted,
             fontFamily: 'Cairo',
             fontSize: 13,
             height: 1.5,
@@ -87,7 +98,7 @@ class HomeHeader extends StatelessWidget {
         actions: [
           Row(
             children: [
-              // زر إنشاء حساب
+              // 1. زر إنشاء حساب جديد
               Expanded(
                 child: OutlinedButton(
                   style: OutlinedButton.styleFrom(
@@ -95,14 +106,21 @@ class HomeHeader extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                     padding: const EdgeInsets.symmetric(vertical: 10),
                   ),
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                   /* Navigator.push(
-                      context,
+                  onPressed: () async {
+                    Navigator.of(dialogContext).pop();
+
+                    final result = await Navigator.of(parentContext).push<bool>(
                       MaterialPageRoute(
-                        builder: (context) => const RegisterScreen(),
+                        builder: (context) => RegisterScreen(isDarkMode: widget.isDarkMode),
                       ),
-                    );*/
+                    );
+
+                    if (result == true && mounted) {
+                      setState(() {
+                        _isLoggedIn = true; // حفظ حالة الدخول
+                      });
+                      _navigateToCart(parentContext);
+                    }
                   },
                   child: const Text(
                     "حساب جديد",
@@ -116,7 +134,8 @@ class HomeHeader extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 10),
-              // زر تسجيل الدخول
+
+              // 2. زر تسجيل الدخول
               Expanded(
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -125,14 +144,23 @@ class HomeHeader extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 10),
                     elevation: 0,
                   ),
-                  onPressed: () {
-                    Navigator.pop(dialogContext);
-                    //Navigator.push(
-                     // context,
-                     // MaterialPageRoute(
-                      //  builder: (context) => const LoginScreen(),
-                      //),
-                   // );
+                  onPressed: () async {
+                    Navigator.of(dialogContext).pop();
+
+                    // انتظار نتيجة الدخول عند العودة من الشاشة
+                    final result = await Navigator.of(parentContext).push<bool>(
+                      MaterialPageRoute(
+                        builder: (context) => LoginScreen(isDarkMode: widget.isDarkMode),
+                      ),
+                    );
+
+                    // إذا نجح تسجيل الدخول (أرجعت true)
+                    if (result == true && mounted) {
+                      setState(() {
+                        _isLoggedIn = true; // حفظ حالة الدخول
+                      });
+                      _navigateToCart(parentContext);
+                    }
                   },
                   child: const Text(
                     "تسجيل الدخول",
@@ -171,8 +199,8 @@ class HomeHeader extends StatelessWidget {
             ),
             child: CircleAvatar(
               radius: 20,
-              backgroundColor: cardBg,
-              child: Icon(Icons.person_outline, color: textMain, size: 22),
+              backgroundColor: widget.cardBg,
+              child: Icon(Icons.person_outline, color: widget.textMain, size: 22),
             ),
           ),
           const Spacer(),
@@ -183,7 +211,7 @@ class HomeHeader extends StatelessWidget {
               Text(
                 "الايهاب",
                 style: TextStyle(
-                  color: isDarkMode ? AppColors.darkTextLight : AppColors.primaryBlue,
+                  color: widget.isDarkMode ? AppColors.darkTextLight : AppColors.primaryBlue,
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
                   fontFamily: 'Cairo',
@@ -194,7 +222,7 @@ class HomeHeader extends StatelessWidget {
               Text(
                 "لخدمات الاتصال",
                 style: TextStyle(
-                  color: textSub,
+                  color: widget.textSub,
                   fontSize: 15.5,
                   fontWeight: FontWeight.w700,
                   letterSpacing: 1.5,
@@ -205,28 +233,28 @@ class HomeHeader extends StatelessWidget {
           const Spacer(),
           // زر تبديل الوضع
           GestureDetector(
-            onTap: onThemeToggle,
+            onTap: widget.onThemeToggle,
             child: Container(
               padding: const EdgeInsets.all(10),
               decoration: BoxDecoration(
-                color: cardBg,
+                color: widget.cardBg,
                 shape: BoxShape.circle,
-                border: Border.all(color: textMain.withOpacity(0.08), width: 1),
+                border: Border.all(color: widget.textMain.withOpacity(0.08), width: 1),
               ),
               child: AnimatedSwitcher(
                 duration: const Duration(milliseconds: 300),
                 transitionBuilder: (child, anim) => ScaleTransition(scale: anim, child: child),
                 child: Icon(
-                  isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
-                  key: ValueKey<bool>(isDarkMode),
-                  color: isDarkMode ? AppColors.accentGold : AppColors.primaryBlue,
+                  widget.isDarkMode ? Icons.wb_sunny_outlined : Icons.nightlight_round_outlined,
+                  key: ValueKey<bool>(widget.isDarkMode),
+                  color: widget.isDarkMode ? AppColors.accentGold : AppColors.primaryBlue,
                   size: 20,
                 ),
               ),
             ),
           ),
           const SizedBox(width: 10),
-          // سلة التسوق (تمت إضافة الضغط والتفعيل هنا)
+          // سلة التسوق
           GestureDetector(
             onTap: () => _handleCartClick(context),
             child: Stack(
@@ -235,11 +263,11 @@ class HomeHeader extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: cardBg,
+                    color: widget.cardBg,
                     shape: BoxShape.circle,
-                    border: Border.all(color: textMain.withOpacity(0.08), width: 1),
+                    border: Border.all(color: widget.textMain.withOpacity(0.08), width: 1),
                   ),
-                  child: Icon(Icons.shopping_bag_outlined, color: textMain, size: 20),
+                  child: Icon(Icons.shopping_bag_outlined, color: widget.textMain, size: 20),
                 ),
                 Positioned(
                   top: -1,
