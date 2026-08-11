@@ -3,6 +3,7 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import '../cart/cart_screen.dart';
+import '../cart/cart_service.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -33,7 +34,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     const Color(0xFF333333), // اسود غامق
     const Color(0xFFE0E0E0), // فضي
     const Color(0xFF4A5568), // تيتانيوم
-    const Color(0xFFD4AF37), //ذهبي
+    const Color(0xFFD4AF37), // ذهبي
   ];
 
   @override
@@ -118,7 +119,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    //  عرض صورة المنتج المميزة
+                    // عرض صورة المنتج المميزة
                     Container(
                       height: 250,
                       width: double.infinity,
@@ -136,6 +137,8 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             image,
                             height: 180,
                             fit: BoxFit.contain,
+                            errorBuilder: (context, error, stackTrace) =>
+                            const Icon(Icons.phone_android, size: 80, color: Colors.grey),
                           ),
                         ),
                       ),
@@ -143,7 +146,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
                     const SizedBox(height: 24),
 
-                    // 3. اسم المنتج والتقييم
+                    // اسم المنتج والتقييم
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -216,7 +219,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     Divider(color: textMutedColor.withOpacity(0.2)),
                     const SizedBox(height: 16),
 
-                    // 4. اختيار السعة / الذاكرة
+                    // اختيار السعة
                     Text(
                       isArabic ? "السعة التخزينية:" : "Storage Capacity:",
                       style: TextStyle(
@@ -267,7 +270,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
                     const SizedBox(height: 20),
 
-                    // 5. اختيار اللون
+                    // اختيار اللون
                     Text(
                       isArabic ? "اختر اللون:" : "Select Color:",
                       style: TextStyle(
@@ -308,7 +311,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
                     const SizedBox(height: 24),
 
-                    // 6. الوصف والتفاصيل
+                    // الوصف والتفاصيل
                     Text(
                       isArabic ? "الوصف والمواصفات:" : "Description & Specs:",
                       style: TextStyle(
@@ -336,7 +339,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               ),
             ),
 
-            // 7. الشريط السفلي لإضافة الكمية والسلة
+            // الشريط السفلي لإضافة الكمية والسلة
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
@@ -407,6 +410,13 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           elevation: 0,
                         ),
                         onPressed: () {
+                          // إضافة المنتج بالخدمة
+                          CartService.addToCart(
+                            widget.product,
+                            quantity: quantity,
+                            selectedStorage: storageOptions[selectedStorageIndex],
+                          );
+
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text(
@@ -418,7 +428,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                             ),
                           );
 
-                          // الانتقال المباشر لشاشة السلة
                           Navigator.push(
                             context,
                             MaterialPageRoute(
