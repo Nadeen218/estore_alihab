@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'product_details_screen.dart';
+import '../cart/cart_screen.dart';
 
 class ProductsScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -153,6 +154,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ),
           actions: [
+            IconButton(
+              icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.accentCyan),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CartScreen(
+                      isDarkMode: isDarkMode,
+                      currentLocale: currentLocale,
+                    ),
+                  ),
+                );
+              },
+            ),
             IconButton(
               icon: Icon(
                 isDarkMode ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
@@ -397,16 +412,41 @@ class _ProductsScreenState extends State<ProductsScreen> {
                             ),
                         ],
                       ),
-                      Container(
-                        padding: const EdgeInsets.all(7),
-                        decoration: BoxDecoration(
-                          color: AppColors.accentBlue,
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: const Icon(
-                          Icons.add_shopping_cart_rounded,
-                          color: Colors.white,
-                          size: 15,
+                      InkWell(
+                        onTap: () {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(
+                                isArabic ? "تم إضافة المنتج إلى السلة بنجاح!" : "Added to cart successfully!",
+                                style: const TextStyle(fontFamily: 'Cairo'),
+                              ),
+                              backgroundColor: AppColors.accentGreen,
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CartScreen(
+                                isDarkMode: isDarkMode,
+                                currentLocale: currentLocale,
+                              ),
+                            ),
+                          );
+                        },
+                        borderRadius: BorderRadius.circular(12),
+                        child: Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppColors.accentBlue,
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.add_shopping_cart_rounded,
+                            color: Colors.white,
+                            size: 15,
+                          ),
                         ),
                       ),
                     ],
