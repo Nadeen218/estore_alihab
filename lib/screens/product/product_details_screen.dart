@@ -2,6 +2,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import '../cart/cart_screen.dart';
 
 class ProductDetailsScreen extends StatefulWidget {
   final Map<String, dynamic> product;
@@ -86,6 +87,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
           ),
           actions: [
             IconButton(
+              icon: const Icon(Icons.shopping_bag_outlined, color: AppColors.accentCyan),
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => CartScreen(
+                      isDarkMode: isDarkMode,
+                      currentLocale: currentLocale,
+                    ),
+                  ),
+                );
+              },
+            ),
+            IconButton(
               icon: const Icon(Icons.favorite_border_rounded, color: Colors.redAccent),
               onPressed: () {
                 // إشارة الإضافة للمفضلة
@@ -103,7 +118,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 2. حاوي عرض صورة المنتج المميزة
+                    //  عرض صورة المنتج المميزة
                     Container(
                       height: 250,
                       width: double.infinity,
@@ -381,7 +396,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
                     const SizedBox(width: 16),
 
-                    // زر الإضافة للسلة
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -400,7 +414,18 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                 style: const TextStyle(fontFamily: 'Cairo'),
                               ),
                               backgroundColor: AppColors.accentGreen,
-                              duration: const Duration(seconds: 2),
+                              duration: const Duration(seconds: 1),
+                            ),
+                          );
+
+                          // الانتقال المباشر لشاشة السلة
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => CartScreen(
+                                isDarkMode: isDarkMode,
+                                currentLocale: currentLocale,
+                              ),
                             ),
                           );
                         },
