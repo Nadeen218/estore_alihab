@@ -1,5 +1,3 @@
-// lib/cart/cart_service.dart
-
 import 'package:flutter/material.dart';
 
 class CartItem {
@@ -22,24 +20,7 @@ class CartItem {
 
 class CartService {
   static final ValueNotifier<List<CartItem>> cartItemsNotifier =
-  ValueNotifier<List<CartItem>>([
-    CartItem(
-      id: "1",
-      title: "iPhone 15 Pro Max",
-      subtitle: "256GB • أسود تيتانيوم",
-      price: 4500.0,
-      quantity: 1,
-      image: "https://img.icons8.com/plasticine/200/iphone-x.png",
-    ),
-    CartItem(
-      id: "2",
-      title: "AirPods Pro (2nd)",
-      subtitle: "أبيض",
-      price: 750.0,
-      quantity: 1,
-      image: "https://img.icons8.com/plasticine/200/headphones.png",
-    ),
-  ]);
+  ValueNotifier<List<CartItem>>([]);
 
   static List<CartItem> get items => cartItemsNotifier.value;
 
@@ -49,7 +30,6 @@ class CartService {
         String? selectedStorage,
         String? selectedColor,
       }) {
-    // 1. معالجة السعر بشكل استباقي لمنع الـ null أو القيم النصية المعقدة
     double parsedPrice = 0.0;
     var rawPrice = product["price"] ?? product["productPrice"] ?? product["priceAmount"];
 
@@ -57,18 +37,15 @@ class CartService {
       if (rawPrice is num) {
         parsedPrice = rawPrice.toDouble();
       } else {
-        // تنظيف النص من الفواصل والعملات مثل "3,800 ₪" -> "3800"
         String cleanPrice = rawPrice.toString().replaceAll(',', '').replaceAll(RegExp(r'[^\d.]'), '');
         parsedPrice = double.tryParse(cleanPrice) ?? 0.0;
       }
     }
 
-    // 2. استخراج الـ ID و العنوان و الصورة مع بدائل مريحة
     final String id = (product["id"] ?? product["_id"] ?? product["title"] ?? DateTime.now().millisecondsSinceEpoch).toString();
     final String title = (product["title"] ?? product["name"] ?? "منتج").toString();
     final String image = (product["image"] ?? product["imageUrl"] ?? "").toString();
 
-    // 3. بناء الـ Subtitle من الخيارات المحددة
     List<String> details = [];
     if (selectedStorage != null && selectedStorage.isNotEmpty) details.add(selectedStorage);
     if (selectedColor != null && selectedColor.isNotEmpty) details.add(selectedColor);
@@ -79,7 +56,6 @@ class CartService {
 
     List<CartItem> currentList = List.from(cartItemsNotifier.value);
 
-    // البحث عن المنتج بالـ ID أو العنوان لضمان عدم التكرار الخاطئ
     int existingIndex = currentList.indexWhere((item) => item.id == id || item.title == title);
 
     if (existingIndex >= 0) {
@@ -97,7 +73,6 @@ class CartService {
       );
     }
 
-    // إشعار شاشة السلة بحدث التحديث
     cartItemsNotifier.value = currentList;
   }
 
@@ -125,6 +100,10 @@ class CartService {
         cartItemsNotifier.value = currentList;
       }
     }
+  }
+
+  static void clearCart() {
+    cartItemsNotifier.value = [];
   }
 
   static double get subtotal {
