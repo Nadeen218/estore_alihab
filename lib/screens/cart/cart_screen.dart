@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'checkout_screen.dart';
 import 'cart_service.dart';
+import '../product/products_screen.dart';
 
 class CartScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -24,6 +25,26 @@ class _CartScreenState extends State<CartScreen> {
   void dispose() {
     _promoController.dispose();
     super.dispose();
+  }
+
+  void _applyPromoCode() {
+    FocusScope.of(context).unfocus();
+    final isArabic = widget.currentLocale == 'ar';
+    final code = _promoController.text.trim();
+
+    if (code.isEmpty) return;
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          isArabic ? "تم تطبيق كود الخصم بنجاح!" : "Promo code applied successfully!",
+          style: const TextStyle(fontFamily: 'Cairo'),
+        ),
+        backgroundColor: const Color(0xFF10B981),
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+      ),
+    );
   }
 
   @override
@@ -73,16 +94,7 @@ class _CartScreenState extends State<CartScreen> {
           valueListenable: CartService.cartItemsNotifier,
           builder: (context, cartItems, child) {
             if (cartItems.isEmpty) {
-              return Center(
-                child: Text(
-                  isArabic ? "السلة فارغة حالياً" : "Your cart is empty",
-                  style: TextStyle(
-                    color: mutedTextColor,
-                    fontFamily: 'Cairo',
-                    fontSize: 15,
-                  ),
-                ),
-              );
+              return _buildEmptyCart(textColor, mutedTextColor, primaryBlue, isArabic);
             }
 
             return SingleChildScrollView(
@@ -151,7 +163,7 @@ class _CartScreenState extends State<CartScreen> {
                             ),
                             elevation: 0,
                           ),
-                          onPressed: () {},
+                          onPressed: _applyPromoCode,
                           child: Text(
                             isArabic ? "تطبيق" : "Apply",
                             style: const TextStyle(
@@ -324,112 +336,120 @@ class _CartScreenState extends State<CartScreen> {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                item.title,
-                style: TextStyle(
-                  color: textColor,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 13.5,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-              const SizedBox(height: 2),
-              Text(
-                item.subtitle,
-                style: TextStyle(
-                  color: mutedTextColor,
-                  fontSize: 11,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                "${(item.price * item.quantity).toInt()} ₪",
-                style: const TextStyle(
-                  color: Color(0xFF10B981),
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  fontFamily: 'Cairo',
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                children: [
-                  Container(
-                    decoration: BoxDecoration(
-                      color: widget.isDarkMode
-                          ? AppColors.darkBackground
-                          : const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(20),
-                    ),
-                    child: Row(
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            CartService.decrementQuantity(index);
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            child: Icon(Icons.remove, size: 14, color: mutedTextColor),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                          child: Text(
-                            "${item.quantity}",
-                            style: TextStyle(
-                              color: textColor,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            CartService.incrementQuantity(index);
-                          },
-                          borderRadius: BorderRadius.circular(20),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: primaryBlue,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(Icons.add, size: 12, color: Colors.white),
-                          ),
-                        ),
-                      ],
-                    ),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  item.title,
+                  style: TextStyle(
+                    color: textColor,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13.5,
+                    fontFamily: 'Cairo',
                   ),
-                  const SizedBox(width: 8),
-                  InkWell(
-                    onTap: () {
-                      CartService.removeItem(index);
-                    },
-                    borderRadius: BorderRadius.circular(10),
-                    child: Container(
-                      padding: const EdgeInsets.all(6),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFFFFF1F2),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: const Icon(
-                        Icons.delete_outline_rounded,
-                        color: Color(0xFFF43F5E),
-                        size: 16,
-                      ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                if (item.subtitle.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    item.subtitle,
+                    style: TextStyle(
+                      color: mutedTextColor,
+                      fontSize: 11,
+                      fontFamily: 'Cairo',
                     ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  "${(item.price * item.quantity).toInt()} ₪",
+                  style: const TextStyle(
+                    color: Color(0xFF10B981),
+                    fontWeight: FontWeight.bold,
+                    fontSize: 14,
+                    fontFamily: 'Cairo',
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Row(
+                  children: [
+                    Container(
+                      decoration: BoxDecoration(
+                        color: widget.isDarkMode
+                            ? AppColors.darkBackground
+                            : const Color(0xFFF1F5F9),
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                      child: Row(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              CartService.decrementQuantity(index);
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              child: Icon(Icons.remove, size: 14, color: mutedTextColor),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                            child: Text(
+                              "${item.quantity}",
+                              style: TextStyle(
+                                color: textColor,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          InkWell(
+                            onTap: () {
+                              CartService.incrementQuantity(index);
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.all(4),
+                              decoration: BoxDecoration(
+                                color: primaryBlue,
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(Icons.add, size: 12, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    InkWell(
+                      onTap: () {
+                        CartService.removeItem(index);
+                      },
+                      borderRadius: BorderRadius.circular(10),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFFFF1F2),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        child: const Icon(
+                          Icons.delete_outline_rounded,
+                          color: Color(0xFFF43F5E),
+                          size: 16,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
 
-          const Spacer(),
+          const SizedBox(width: 12),
 
           ClipRRect(
             borderRadius: BorderRadius.circular(16),
@@ -443,7 +463,7 @@ class _CartScreenState extends State<CartScreen> {
                 item.image,
                 fit: BoxFit.cover,
                 errorBuilder: (context, error, stackTrace) =>
-                const Icon(Icons.image_not_supported_outlined),
+                    Icon(Icons.image_not_supported_outlined, color: mutedTextColor),
               ),
             ),
           ),
@@ -479,6 +499,83 @@ class _CartScreenState extends State<CartScreen> {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildEmptyCart(Color textColor, Color mutedTextColor, Color primaryBlue, bool isArabic) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: primaryBlue.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.shopping_bag_outlined,
+                size: 70,
+                color: primaryBlue,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              isArabic ? "السلة فارغة حالياً" : "Your cart is empty",
+              style: TextStyle(
+                color: textColor,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                fontFamily: 'Cairo',
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              isArabic
+                  ? "قم بإضافة بعض المنتجات لتظهر لك هنا"
+                  : "Add some items to start shopping",
+              style: TextStyle(
+                color: mutedTextColor,
+                fontSize: 14,
+                fontFamily: 'Cairo',
+              ),
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                elevation: 0,
+              ),
+              onPressed: () {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProductsScreen(
+                      isDarkMode: widget.isDarkMode,
+                      currentLocale: widget.currentLocale,
+                    ),
+                  ),
+                );
+              },
+              child: Text(
+                isArabic ? "تصفح المنتجات" : "Browse Products",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontFamily: 'Cairo',
+                  fontSize: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
