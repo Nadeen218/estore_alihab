@@ -10,7 +10,14 @@ import 'widgets/featured_products.dart';
 import '../product/products_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
+  final bool? isDarkMode;
+  final String? currentLocale;
+
+  const HomeScreen({
+    Key? key,
+    this.isDarkMode,
+    this.currentLocale,
+  }) : super(key: key);
 
   @override
   State<HomeScreen> createState() => _HomeScreenState();
@@ -18,8 +25,16 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
-  bool isDarkMode = true;
-  String currentLocale = 'ar'; // اللغة العربية تلقائياً
+  late bool isDarkMode;
+  late String currentLocale;
+
+  @override
+  void initState() {
+    super.initState();
+    // تهيئة الثيم واللغة بناءً على القيم الممررة للـ Widget أو استخدام القيم الافتراضية
+    isDarkMode = widget.isDarkMode ?? true;
+    currentLocale = widget.currentLocale ?? 'ar';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -33,7 +48,6 @@ class _HomeScreenState extends State<HomeScreen> {
     final isArabic = currentLocale == 'ar';
 
     return Directionality(
-      // يقوم بعكس اتجاه التطبيق كلياً عند تغيير اللغة!
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: backgroundColor,
@@ -163,10 +177,23 @@ class _HomeScreenState extends State<HomeScreen> {
                     currentLocale: currentLocale,
                   ),
                 ),
-              ).then((_) {
-                setState(() {
-                  _currentIndex = 0;
-                });
+              ).then((result) {
+                // تحديث حالة الثيم واللغة فور العودة في حال تم تعديلها في الشاشة التالية
+                if (result != null && result is Map<String, dynamic>) {
+                  setState(() {
+                    _currentIndex = 0;
+                    if (result.containsKey('isDarkMode')) {
+                      isDarkMode = result['isDarkMode'];
+                    }
+                    if (result.containsKey('currentLocale')) {
+                      currentLocale = result['currentLocale'];
+                    }
+                  });
+                } else {
+                  setState(() {
+                    _currentIndex = 0;
+                  });
+                }
               });
             } else {
               setState(() {

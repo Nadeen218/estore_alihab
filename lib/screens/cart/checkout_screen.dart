@@ -1,5 +1,8 @@
+import 'dart:math'; // لإعادة توليد رقم طلب عشوائي
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import 'cart_service.dart';
+import '../track/track_order_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -20,7 +23,7 @@ class CheckoutScreen extends StatefulWidget {
 }
 
 class _CheckoutScreenState extends State<CheckoutScreen> {
-  int selectedPaymentIndex = 0; // 0: الدفع عند الاستلام, 1: بطاقة ائتمان
+  int selectedPaymentIndex = 0;
 
   final TextEditingController nameController = TextEditingController();
   final TextEditingController phoneController = TextEditingController();
@@ -28,6 +31,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController addressController = TextEditingController();
 
   double get totalPrice => widget.subtotal + widget.deliveryFee;
+
+  // توليد رقم طلب عشوائي فريد
+  String _generateOrderId() {
+    final random = Random();
+    final randomNumber = 10000 + random.nextInt(90000); // رقم من 5 خانات
+    return "ES-$randomNumber";
+  }
 
   @override
   void dispose() {
@@ -38,7 +48,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
-  void _showSuccessDialog(bool isArabic) {
+  void _processOrder(bool isArabic) {
+    final name = nameController.text.trim();
+    final phone = phoneController.text.trim();
+    final city = cityController.text.trim();
+    final address = addressController.text.trim();
+
+    if (name.isEmpty || phone.isEmpty || city.isEmpty || address.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic
+                ? "جميع معلومات التوصيل إجبارية، يرجى ملء كافة الحقول"
+                : "All delivery information fields are required",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.redAccent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      );
+      return;
+    }
+
+    final generatedOrderId = _generateOrderId();
+    _showSuccessDialog(isArabic, generatedOrderId, phone);
+  }
+
+  void _showSuccessDialog(bool isArabic, String orderId, String phoneNumber) {
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -73,7 +110,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     size: 40,
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 16),
                 Text(
                   isArabic ? "تم تأكيد طلبك بنجاح!" : "Order Confirmed!",
                   style: TextStyle(
@@ -83,22 +120,40 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     fontFamily: 'Cairo',
                   ),
                 ),
+                const SizedBox(height: 6),
+                // عرض رقم الطلب للمستخدم
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.accentBlue.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Text(
+                    "${isArabic ? 'رقم الطلب' : 'Order ID'}: #$orderId",
+                    style: const TextStyle(
+                      color: AppColors.accentBlue,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                      fontFamily: 'Cairo',
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 10),
                 Text(
                   isArabic
-                      ? "شكراً لتسوقك من 'إيهاب ستور'. سنتواصل معك قريباً لتأكيد التوصيل."
-                      : "Thank you for shopping at 'Ehab Store'. We will contact you soon for delivery.",
+                      ? "شكراً لتسوقك من 'إيهاب ستور'. يمكنك استخدام رقم الطلب لتتبع شحنتك."
+                      : "Thank you for shopping at 'Ehab Store'. Use your Order ID to track shipment.",
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     color: widget.isDarkMode
                         ? AppColors.darkTextMuted
                         : AppColors.lightTextMuted,
-                    fontSize: 12.5,
+                    fontSize: 12,
                     fontFamily: 'Cairo',
-                    height: 1.5,
+                    height: 1.4,
                   ),
                 ),
-                const SizedBox(height: 24),
+                const SizedBox(height: 20),
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -111,11 +166,25 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       elevation: 0,
                     ),
                     onPressed: () {
-                      Navigator.pop(dialogContext); // إغلاق النافذة
-                      Navigator.pop(context); // العودة من الشيك أوت
+                      CartService.clearCart();
+                      Navigator.pop(dialogContext);
+
+                      // التوجه لشاشة التتبع وتمرير رقم الطلب والهاتف تلقائياً
+                      Navigator.pushAndRemoveUntil(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => TrackOrderScreen(
+                            isDarkMode: widget.isDarkMode,
+                            currentLocale: widget.currentLocale,
+                              initialOrderId: orderId,
+                              initialPhoneNumber: phoneNumber,
+                          ),
+                        ),
+                            (route) => false,
+                      );
                     },
                     child: Text(
-                      isArabic ? "العودة للرئيسية" : "Back to Home",
+                      isArabic ? "تتبع الطلب الآن" : "Track Order Now",
                       style: const TextStyle(
                         color: Colors.white,
                         fontWeight: FontWeight.bold,
@@ -183,12 +252,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Expanded(
               child: SingleChildScrollView(
                 physics: const BouncingScrollPhysics(),
-                padding:
-                const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // 1. قسم عنوان ورقم التوصيل
                     Text(
                       isArabic ? "معلومات التوصيل" : "Delivery Information",
                       style: TextStyle(
@@ -204,17 +271,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: widget.isDarkMode
-                              ? Colors.white.withOpacity(0.05)
-                              : Colors.black.withOpacity(0.04),
-                        ),
                       ),
                       child: Column(
                         children: [
                           _buildTextField(
                             controller: nameController,
-                            hint: isArabic ? "الاسم الكامل" : "Full Name",
+                            hint: isArabic ? "الاسم الكامل *" : "Full Name *",
                             icon: Icons.person_outline_rounded,
                             textColor: textColor,
                             textMutedColor: textMutedColor,
@@ -222,7 +284,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           const SizedBox(height: 12),
                           _buildTextField(
                             controller: phoneController,
-                            hint: isArabic ? "رقم الهاتف" : "Phone Number",
+                            hint: isArabic ? "رقم الهاتف *" : "Phone Number *",
                             icon: Icons.phone_android_outlined,
                             keyboardType: TextInputType.phone,
                             textColor: textColor,
@@ -231,7 +293,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           const SizedBox(height: 12),
                           _buildTextField(
                             controller: cityController,
-                            hint: isArabic ? "المدينة" : "City",
+                            hint: isArabic ? "المدينة *" : "City *",
                             icon: Icons.location_city_outlined,
                             textColor: textColor,
                             textMutedColor: textMutedColor,
@@ -240,8 +302,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           _buildTextField(
                             controller: addressController,
                             hint: isArabic
-                                ? "العنوان التفصيلي (الشارع، البناية)"
-                                : "Detailed Address",
+                                ? "العنوان التفصيلي *"
+                                : "Detailed Address *",
                             icon: Icons.location_on_outlined,
                             textColor: textColor,
                             textMutedColor: textMutedColor,
@@ -252,7 +314,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     const SizedBox(height: 24),
 
-                    // 2. قسم طريقة الدفع
                     Text(
                       isArabic ? "طريقة الدفع" : "Payment Method",
                       style: TextStyle(
@@ -296,7 +357,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
                     const SizedBox(height: 24),
 
-                    // 3. ملخص المبالغ
                     Text(
                       isArabic ? "ملخص الفاتورة" : "Order Summary",
                       style: TextStyle(
@@ -312,11 +372,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       decoration: BoxDecoration(
                         color: cardColor,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: widget.isDarkMode
-                              ? Colors.white.withOpacity(0.05)
-                              : Colors.black.withOpacity(0.04),
-                        ),
                       ),
                       child: Column(
                         children: [
@@ -401,20 +456,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               ),
             ),
 
-            // زر إتمام وتأكيد الطلب
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
                 color: cardColor,
-                borderRadius:
-                const BorderRadius.vertical(top: Radius.circular(28)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.08),
-                    blurRadius: 10,
-                    offset: const Offset(0, -4),
-                  ),
-                ],
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
               ),
               child: SafeArea(
                 child: SizedBox(
@@ -429,7 +475,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       elevation: 0,
                     ),
                     onPressed: () {
-                      _showSuccessDialog(isArabic);
+                      _processOrder(isArabic);
                     },
                     child: Text(
                       isArabic ? "تأكيد وإرسال الطلب" : "Confirm Order",
@@ -450,7 +496,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ودجت الحقول الإدخال
   Widget _buildTextField({
     required TextEditingController controller,
     required String hint,
@@ -482,7 +527,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // ودجت اختيار طريقة الدفع
   Widget _buildPaymentOption({
     required int index,
     required String title,
@@ -507,11 +551,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           color: cardColor,
           borderRadius: BorderRadius.circular(18),
           border: Border.all(
-            color: isSelected
-                ? AppColors.accentBlue
-                : (widget.isDarkMode
-                ? Colors.white.withOpacity(0.05)
-                : Colors.black.withOpacity(0.04)),
+            color: isSelected ? AppColors.accentBlue : Colors.transparent,
             width: isSelected ? 1.8 : 1.0,
           ),
         ),

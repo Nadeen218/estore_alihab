@@ -5,11 +5,15 @@ import '../home/home_screen.dart';
 class TrackOrderScreen extends StatefulWidget {
   final bool isDarkMode;
   final String currentLocale;
+  final String? initialOrderId;
+  final String? initialPhoneNumber;
 
   const TrackOrderScreen({
     Key? key,
     this.isDarkMode = false,
     this.currentLocale = 'ar',
+    this.initialOrderId,
+    this.initialPhoneNumber,
   }) : super(key: key);
 
   @override
@@ -17,10 +21,21 @@ class TrackOrderScreen extends StatefulWidget {
 }
 
 class _TrackOrderScreenState extends State<TrackOrderScreen> {
-  final TextEditingController _orderIdController = TextEditingController();
-  final TextEditingController _phoneController = TextEditingController();
+  late TextEditingController _orderIdController;
+  late TextEditingController _phoneController;
 
   bool _hasSearched = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _orderIdController = TextEditingController(text: widget.initialOrderId ?? '');
+    _phoneController = TextEditingController(text: widget.initialPhoneNumber ?? '');
+
+    if (_orderIdController.text.isNotEmpty && _phoneController.text.isNotEmpty) {
+      _hasSearched = true;
+    }
+  }
 
   @override
   void dispose() {
@@ -30,14 +45,23 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
   }
 
   void _navigateToHome() {
+    if (!mounted) return;
+
     if (Navigator.canPop(context)) {
-      Navigator.popUntil(context, (route) => route.isFirst);
+      Navigator.pop(context, {
+        'isDarkMode': widget.isDarkMode,
+        'currentLocale': widget.currentLocale,
+      });
     } else {
-      Navigator.pushReplacement(
+      Navigator.pushAndRemoveUntil(
         context,
         MaterialPageRoute(
-          builder: (context) => const HomeScreen(),
+          builder: (context) => HomeScreen(
+            isDarkMode: widget.isDarkMode,
+            currentLocale: widget.currentLocale,
+          ),
         ),
+            (route) => false,
       );
     }
   }
@@ -49,7 +73,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
     final phone = _phoneController.text.trim();
     final isArabic = widget.currentLocale == 'ar';
 
-    // التحقق من وجود مدخلات قبل تنفيذ التتبع
     if (orderId.isEmpty || phone.isEmpty) {
       setState(() {
         _hasSearched = false;
@@ -85,10 +108,11 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
     final mutedTextColor = widget.isDarkMode ? AppColors.darkTextMuted : const Color(0xFF8E9BAE);
     final primaryBlue = const Color(0xFF0052CC);
 
-    return WillPopScope(
-      onWillPop: () async {
+    return PopScope(
+      canPop: false,
+      onPopInvoked: (didPop) {
+        if (didPop) return;
         _navigateToHome();
-        return false;
       },
       child: Directionality(
         textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
