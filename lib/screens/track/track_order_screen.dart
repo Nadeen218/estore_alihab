@@ -5,6 +5,7 @@ import '../home/home_screen.dart';
 class TrackOrderScreen extends StatefulWidget {
   final bool isDarkMode;
   final String currentLocale;
+  final bool isLoggedIn;
   final String? initialOrderId;
   final String? initialPhoneNumber;
 
@@ -12,6 +13,7 @@ class TrackOrderScreen extends StatefulWidget {
     Key? key,
     this.isDarkMode = false,
     this.currentLocale = 'ar',
+    this.isLoggedIn = true,
     this.initialOrderId,
     this.initialPhoneNumber,
   }) : super(key: key);
@@ -23,12 +25,14 @@ class TrackOrderScreen extends StatefulWidget {
 class _TrackOrderScreenState extends State<TrackOrderScreen> {
   late TextEditingController _orderIdController;
   late TextEditingController _phoneController;
+  late bool _isLoggedIn;
 
   bool _hasSearched = false;
 
   @override
   void initState() {
     super.initState();
+    _isLoggedIn = widget.isLoggedIn;
     _orderIdController = TextEditingController(text: widget.initialOrderId ?? '');
     _phoneController = TextEditingController(text: widget.initialPhoneNumber ?? '');
 
@@ -47,23 +51,17 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
   void _navigateToHome() {
     if (!mounted) return;
 
-    if (Navigator.canPop(context)) {
-      Navigator.pop(context, {
-        'isDarkMode': widget.isDarkMode,
-        'currentLocale': widget.currentLocale,
-      });
-    } else {
-      Navigator.pushAndRemoveUntil(
-        context,
-        MaterialPageRoute(
-          builder: (context) => HomeScreen(
-            isDarkMode: widget.isDarkMode,
-            currentLocale: widget.currentLocale,
-          ),
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (context) => HomeScreen(
+          isDarkMode: widget.isDarkMode,
+          currentLocale: widget.currentLocale,
+          isLoggedIn: _isLoggedIn,
         ),
-            (route) => false,
-      );
-    }
+      ),
+          (route) => false,
+    );
   }
 
   void _handleSearch() {

@@ -8,15 +8,18 @@ import 'widgets/services_section.dart';
 import 'widgets/track_order_card.dart';
 import 'widgets/featured_products.dart';
 import '../product/products_screen.dart';
+import '../track/track_order_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool? isDarkMode;
   final String? currentLocale;
+  final bool? isLoggedIn;
 
   const HomeScreen({
     Key? key,
     this.isDarkMode,
     this.currentLocale,
+    this.isLoggedIn,
   }) : super(key: key);
 
   @override
@@ -27,13 +30,14 @@ class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   late bool isDarkMode;
   late String currentLocale;
+  late bool _isLoggedIn;
 
   @override
   void initState() {
     super.initState();
-    // تهيئة الثيم واللغة بناءً على القيم الممررة للـ Widget أو استخدام القيم الافتراضية
     isDarkMode = widget.isDarkMode ?? true;
     currentLocale = widget.currentLocale ?? 'ar';
+    _isLoggedIn = widget.isLoggedIn ?? false;
   }
 
   @override
@@ -63,12 +67,17 @@ class _HomeScreenState extends State<HomeScreen> {
               children: [
                 const SizedBox(height: 16),
 
-                // 1. الهيدر (العنوان والتنبيهات)
                 HomeHeader(
                   isDarkMode: isDarkMode,
                   cardBg: cardColor,
                   textMain: textColor,
                   textSub: textMutedColor,
+                  isLoggedIn: _isLoggedIn,
+                  onLoginStatusChanged: (status) {
+                    setState(() {
+                      _isLoggedIn = status;
+                    });
+                  },
                   onThemeToggle: () {
                     setState(() {
                       isDarkMode = !isDarkMode;
@@ -77,7 +86,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // 2. شريط البحث وتعديل اللغة التفاعلي
                 SearchBarWidget(
                   isDarkMode: isDarkMode,
                   cardBg: cardColor,
@@ -92,7 +100,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 24),
 
-                // 3. البانر الإعلاني
                 PromoBanner(
                   startColor: gradientStart,
                   endColor: gradientEnd,
@@ -100,7 +107,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // 4. التصنيفات
                 CategoriesList(
                   isDarkMode: isDarkMode,
                   cardBg: cardColor,
@@ -110,7 +116,6 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 28),
 
-                // 5. قسم الخدمات الرقمية
                 ServicesSection(
                   isDarkMode: isDarkMode,
                   cardBg: cardColor,
@@ -120,16 +125,40 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 20),
 
-                // 6. كرت تتبع الشحنات والطلب
                 TrackOrderCard(
                   cardBg: cardColor,
                   textMain: textColor,
                   textSub: textMutedColor,
                   currentLocale: currentLocale,
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TrackOrderScreen(
+                          isDarkMode: isDarkMode,
+                          currentLocale: currentLocale,
+                          isLoggedIn: _isLoggedIn,
+                        ),
+                      ),
+                    ).then((result) {
+                      if (result != null && result is Map<String, dynamic>) {
+                        setState(() {
+                          if (result.containsKey('isDarkMode')) {
+                            isDarkMode = result['isDarkMode'];
+                          }
+                          if (result.containsKey('currentLocale')) {
+                            currentLocale = result['currentLocale'];
+                          }
+                          if (result.containsKey('isLoggedIn')) {
+                            _isLoggedIn = result['isLoggedIn'];
+                          }
+                        });
+                      }
+                    });
+                  },
                 ),
                 const SizedBox(height: 28),
 
-                // 7. المنتجات الأكثر مبيعاً
                 FeaturedProducts(
                   isDarkMode: isDarkMode,
                   cardBg: cardColor,
@@ -142,7 +171,6 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ),
 
-        // 8. شريط التنقل السفلي العائم والمترجم
         bottomNavigationBar: _buildBottomNavigationBar(cardColor, textMutedColor, isArabic),
       ),
     );
@@ -178,7 +206,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ).then((result) {
-                // تحديث حالة الثيم واللغة فور العودة في حال تم تعديلها في الشاشة التالية
                 if (result != null && result is Map<String, dynamic>) {
                   setState(() {
                     _currentIndex = 0;
