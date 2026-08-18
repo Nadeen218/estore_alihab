@@ -12,6 +12,7 @@ class HomeHeader extends StatelessWidget {
   final Color textSub;
   final bool isLoggedIn;
   final ValueChanged<bool> onLoginStatusChanged;
+  final String currentLocale;
 
   const HomeHeader({
     Key? key,
@@ -22,6 +23,7 @@ class HomeHeader extends StatelessWidget {
     required this.textSub,
     required this.isLoggedIn,
     required this.onLoginStatusChanged,
+    this.currentLocale = 'ar',
   }) : super(key: key);
 
   void _navigateToCart(BuildContext context) {
@@ -30,7 +32,7 @@ class HomeHeader extends StatelessWidget {
       MaterialPageRoute(
         builder: (context) => CartScreen(
           isDarkMode: isDarkMode,
-          currentLocale: 'ar',
+          currentLocale: currentLocale,
         ),
       ),
     );
@@ -45,123 +47,136 @@ class HomeHeader extends StatelessWidget {
   }
 
   void _showAuthRequiredDialog(BuildContext parentContext) {
+    final isArabic = currentLocale == 'ar';
+
     showDialog(
       context: parentContext,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: isDarkMode
-            ? AppColors.darkBackgroundSecondary
-            : AppColors.lightBackgroundSecondary,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
-        title: Column(
-          children: [
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.accentBlue.withOpacity(0.1),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.lock_outline_rounded,
-                size: 36,
-                color: AppColors.accentBlue,
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "تسجيل الدخول مطلوب",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
-                fontFamily: 'Cairo',
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
-            ),
-          ],
-        ),
-        content: Text(
-          "للوصول إلى سلة التسوق وإتمام عملية الشراء، يرجى تسجيل الدخول أو إنشاء حساب جديد.",
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            color: isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted,
-            fontFamily: 'Cairo',
-            fontSize: 13,
-            height: 1.5,
-          ),
-        ),
-        actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
-        actions: [
-          Row(
+      builder: (dialogContext) => Directionality(
+        textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+        child: AlertDialog(
+          backgroundColor: isDarkMode
+              ? AppColors.darkBackgroundSecondary
+              : AppColors.lightBackgroundSecondary,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+          title: Column(
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  style: OutlinedButton.styleFrom(
-                    side: const BorderSide(color: AppColors.accentBlue),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                  ),
-                  onPressed: () async {
-                    Navigator.of(dialogContext).pop();
-
-                    final result = await Navigator.of(parentContext).push<bool>(
-                      MaterialPageRoute(
-                        builder: (context) => RegisterScreen(isDarkMode: isDarkMode),
-                      ),
-                    );
-
-                    if (result == true) {
-                      onLoginStatusChanged(true); // تحديث الحالة
-                      _navigateToCart(parentContext);
-                    }
-                  },
-                  child: const Text(
-                    "حساب جديد",
-                    style: TextStyle(
-                      color: AppColors.accentBlue,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppColors.accentBlue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.lock_outline_rounded,
+                  size: 36,
+                  color: AppColors.accentBlue,
                 ),
               ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.accentBlue,
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                    padding: const EdgeInsets.symmetric(vertical: 10),
-                    elevation: 0,
-                  ),
-                  onPressed: () async {
-                    Navigator.of(dialogContext).pop();
-
-                    final result = await Navigator.of(parentContext).push<bool>(
-                      MaterialPageRoute(
-                        builder: (context) => LoginScreen(isDarkMode: isDarkMode),
-                      ),
-                    );
-
-                    if (result == true) {
-                      onLoginStatusChanged(true);
-                      _navigateToCart(parentContext);
-                    }
-                  },
-                  child: const Text(
-                    "تسجيل الدخول",
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'Cairo',
-                      fontWeight: FontWeight.bold,
-                      fontSize: 13,
-                    ),
-                  ),
+              const SizedBox(height: 12),
+              Text(
+                isArabic ? "تسجيل الدخول مطلوب" : "Login Required",
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
+                  fontFamily: 'Cairo',
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
                 ),
               ),
             ],
           ),
-        ],
+          content: Text(
+            isArabic
+                ? "للصول إلى سلة التسوق وإتمام عملية الشراء، يرجى تسجيل الدخول أو إنشاء حساب جديد."
+                : "To access the cart and complete your purchase, please log in or create a new account.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+              fontFamily: 'Cairo',
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+          actionsPadding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          actions: [
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.accentBlue),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                    ),
+                    onPressed: () async {
+                      Navigator.of(dialogContext).pop();
+
+                      final result = await Navigator.of(parentContext).push<bool>(
+                        MaterialPageRoute(
+                          builder: (context) => RegisterScreen(
+                            isDarkMode: isDarkMode,
+                            currentLocale: currentLocale,
+                          ),
+                        ),
+                      );
+
+                      if (result == true) {
+                        onLoginStatusChanged(true);
+                        _navigateToCart(parentContext);
+                      }
+                    },
+                    child: Text(
+                      isArabic ? "حساب جديد" : "Sign Up",
+                      style: const TextStyle(
+                        color: AppColors.accentBlue,
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentBlue,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                      padding: const EdgeInsets.symmetric(vertical: 10),
+                      elevation: 0,
+                    ),
+                    onPressed: () async {
+                      Navigator.of(dialogContext).pop();
+
+                      final result = await Navigator.of(parentContext).push<bool>(
+                        MaterialPageRoute(
+                          builder: (context) => LoginScreen(
+                            isDarkMode: isDarkMode,
+                            currentLocale: currentLocale,
+                          ),
+                        ),
+                      );
+
+                      if (result == true) {
+                        onLoginStatusChanged(true);
+                        _navigateToCart(parentContext);
+                      }
+                    },
+                    child: Text(
+                      isArabic ? "تسجيل الدخول" : "Login",
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontFamily: 'Cairo',
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }

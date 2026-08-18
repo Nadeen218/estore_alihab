@@ -73,6 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   textMain: textColor,
                   textSub: textMutedColor,
                   isLoggedIn: _isLoggedIn,
+                  currentLocale: currentLocale,
                   onLoginStatusChanged: (status) {
                     setState(() {
                       _isLoggedIn = status;

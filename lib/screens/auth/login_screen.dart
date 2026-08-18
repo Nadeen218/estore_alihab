@@ -6,10 +6,12 @@ import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   final bool isDarkMode;
+  final String currentLocale;
 
   const LoginScreen({
     Key? key,
     this.isDarkMode = true,
+    this.currentLocale = 'ar',
   }) : super(key: key);
 
   @override
@@ -32,13 +34,15 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = widget.isDarkMode;
+    final isArabic = widget.currentLocale == 'ar';
+
     final backgroundColor = isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
     final cardColor = isDarkMode ? AppColors.darkBackgroundSecondary : AppColors.lightBackgroundSecondary;
     final textColor = isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark;
     final textMutedColor = isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
     return Directionality(
-      textDirection: TextDirection.rtl,
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: backgroundColor,
         appBar: AppBar(
@@ -46,7 +50,11 @@ class _LoginScreenState extends State<LoginScreen> {
           elevation: 0,
           scrolledUnderElevation: 0,
           leading: IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded, color: textColor, size: 20),
+            icon: Icon(
+              isArabic ? Icons.arrow_back_ios_new_rounded : Icons.arrow_forward_ios_rounded,
+              color: textColor,
+              size: 20,
+            ),
             onPressed: () => Navigator.pop(context),
           ),
         ),
@@ -59,7 +67,6 @@ class _LoginScreenState extends State<LoginScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // الشعار والترويسة
                   Center(
                     child: Column(
                       children: [
@@ -77,7 +84,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 16),
                         Text(
-                          "أهلاً بك مجدداً! 👋",
+                          isArabic ? "أهلاً بك مجدداً! " : "Welcome Back! ",
                           style: TextStyle(
                             color: textColor,
                             fontSize: 24,
@@ -87,12 +94,15 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(
-                          "قم بتسجيل الدخول لمتابعة التسوق ومتابعة الطلبات",
+                          isArabic
+                              ? "قم بتسجيل الدخول لمتابعة التسوق ومتابعة الطلبات"
+                              : "Log in to continue shopping and tracking your orders",
                           style: TextStyle(
                             color: textMutedColor,
                             fontSize: 13,
                             fontFamily: 'Cairo',
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
@@ -100,9 +110,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 36),
 
-                  // حقل البريد الإلكتروني أو رقم الهاتف
                   Text(
-                    "البريد الإلكتروني / رقم الهاتف",
+                    isArabic ? "البريد الإلكتروني / رقم الهاتف" : "Email / Phone Number",
                     style: TextStyle(
                       color: textColor,
                       fontSize: 13,
@@ -117,7 +126,9 @@ class _LoginScreenState extends State<LoginScreen> {
                     keyboardType: TextInputType.emailAddress,
                     validator: (value) {
                       if (value == null || value.trim().isEmpty) {
-                        return "يرجى إدخال البريد الإلكتروني أو رقم الهاتف";
+                        return isArabic
+                            ? "يرجى إدخال البريد الإلكتروني أو رقم الهاتف"
+                            : "Please enter email or phone number";
                       }
                       return null;
                     },
@@ -145,9 +156,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 20),
 
-                  // حقل كلمة المرور
                   Text(
-                    "كلمة المرور",
+                    isArabic ? "كلمة المرور" : "Password",
                     style: TextStyle(
                       color: textColor,
                       fontSize: 13,
@@ -162,7 +172,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: TextStyle(color: textColor, fontFamily: 'Cairo', fontSize: 14),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
-                        return "يرجى إدخال كلمة المرور";
+                        return isArabic ? "يرجى إدخال كلمة المرور" : "Please enter password";
                       }
                       return null;
                     },
@@ -200,14 +210,13 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                   ),
 
-                  // نسيت كلمة المرور
                   Align(
-                    alignment: Alignment.centerLeft,
+                    alignment: isArabic ? Alignment.centerLeft : Alignment.centerRight,
                     child: TextButton(
                       onPressed: () {},
-                      child: const Text(
-                        "نسيت كلمة المرور؟",
-                        style: TextStyle(
+                      child: Text(
+                        isArabic ? "نسيت كلمة المرور؟" : "Forgot Password?",
+                        style: const TextStyle(
                           color: AppColors.accentCyan,
                           fontSize: 12,
                           fontFamily: 'Cairo',
@@ -219,7 +228,6 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 24),
 
-                  // زر تسجيل الدخول
                   SizedBox(
                     width: double.infinity,
                     height: 52,
@@ -234,18 +242,20 @@ class _LoginScreenState extends State<LoginScreen> {
                       onPressed: () {
                         if (_formKey.currentState!.validate()) {
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text("تم تسجيل الدخول بنجاح!", style: TextStyle(fontFamily: 'Cairo')),
+                            SnackBar(
+                              content: Text(
+                                isArabic ? "تم تسجيل الدخول بنجاح!" : "Logged in successfully!",
+                                style: const TextStyle(fontFamily: 'Cairo'),
+                              ),
                               backgroundColor: AppColors.accentGreen,
                             ),
                           );
-                          // 👈 إرجاع true لإعلام HomeHeader بنجاح العملية لتوجيهه للسلة تلقائياً
                           Navigator.pop(context, true);
                         }
                       },
-                      child: const Text(
-                        "تسجيل الدخول",
-                        style: TextStyle(
+                      child: Text(
+                        isArabic ? "تسجيل الدخول" : "Login",
+                        style: const TextStyle(
                           color: Colors.white,
                           fontSize: 15,
                           fontWeight: FontWeight.bold,
@@ -257,21 +267,22 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   const SizedBox(height: 30),
 
-                  // الانتقال لإنشاء حساب جديد
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Text(
-                        "ليس لديك حساب؟",
+                        isArabic ? "ليس لديك حساب؟" : "Don't have an account?",
                         style: TextStyle(color: textMutedColor, fontFamily: 'Cairo', fontSize: 13),
                       ),
                       GestureDetector(
                         onTap: () async {
-                          // 👈 انتظار النتيجة من شاشة إنشاء الحساب لتمريرها للخلف
                           final result = await Navigator.push<bool>(
                             context,
                             MaterialPageRoute(
-                              builder: (context) => RegisterScreen(isDarkMode: isDarkMode),
+                              builder: (context) => RegisterScreen(
+                                isDarkMode: isDarkMode,
+                                currentLocale: widget.currentLocale,
+                              ),
                             ),
                           );
 
@@ -279,9 +290,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             Navigator.pop(context, true);
                           }
                         },
-                        child: const Text(
-                          " إنشاء حساب جديد",
-                          style: TextStyle(
+                        child: Text(
+                          isArabic ? " إنشاء حساب جديد" : " Sign Up",
+                          style: const TextStyle(
                             color: AppColors.accentBlue,
                             fontFamily: 'Cairo',
                             fontWeight: FontWeight.bold,
