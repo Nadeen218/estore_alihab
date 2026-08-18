@@ -8,6 +8,7 @@ class CategoriesList extends StatelessWidget {
   final Color textMain;
   final Color textSub;
   final String currentLocale;
+  final Function(String)? onCategorySelected;
 
   const CategoriesList({
     Key? key,
@@ -16,6 +17,7 @@ class CategoriesList extends StatelessWidget {
     required this.textMain,
     required this.textSub,
     required this.currentLocale,
+    this.onCategorySelected,
   }) : super(key: key);
 
   @override
@@ -30,7 +32,7 @@ class CategoriesList extends StatelessWidget {
         "color": AppColors.accentCyan
       },
       {
-        "titleAr": " اجهزة لوحية",
+        "titleAr": "أجهزة لوحية",
         "titleEn": "Tablets",
         "icon": Icons.tablet_mac_rounded,
         "color": AppColors.accentBlue
@@ -92,20 +94,26 @@ class CategoriesList extends StatelessWidget {
             itemBuilder: (context, index) {
               final cat = categories[index];
               final Color itemColor = cat["color"];
+              final String categoryName = cat["titleAr"];
+
               return Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8.0),
                 child: GestureDetector(
                   onTap: () {
-                    // الانتقال لشاشة المنتجات عند الكبس على الفئة
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => ProductsScreen(
-                          isDarkMode: isDarkMode,
-                          currentLocale: currentLocale,
+                    if (onCategorySelected != null) {
+                      onCategorySelected!(categoryName);
+                    } else {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ProductsScreen(
+                            isDarkMode: isDarkMode,
+                            currentLocale: currentLocale,
+                            initialCategory: categoryName,
+                          ),
                         ),
-                      ),
-                    );
+                      );
+                    }
                   },
                   child: Column(
                     children: [

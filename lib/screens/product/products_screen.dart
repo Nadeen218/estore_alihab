@@ -6,11 +6,13 @@ import '../cart/cart_screen.dart';
 class ProductsScreen extends StatefulWidget {
   final bool isDarkMode;
   final String currentLocale;
+  final String? initialCategory;
 
   const ProductsScreen({
     Key? key,
     this.isDarkMode = true,
     this.currentLocale = 'ar',
+    this.initialCategory,
   }) : super(key: key);
 
   @override
@@ -23,28 +25,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
   int selectedCategoryIndex = 0;
   String searchQuery = "";
 
-  @override
-  void initState() {
-    super.initState();
-    isDarkMode = widget.isDarkMode;
-    currentLocale = widget.currentLocale;
-  }
-
-  // الفئات المتاحة للتصفية
   final List<Map<String, String>> categories = [
     {"ar": "الكل", "en": "All"},
-    {"ar": "أجهزة", "en": "Devices"},
+    {"ar": "الأجهزة", "en": "Devices"},
     {"ar": "أجهزة لوحية", "en": "Tablets"},
     {"ar": "ساعات ذكية", "en": "Smart Watches"},
-    {"ar": "إكسسوارات", "en": "Accessories"},
+    {"ar": "إكسسوار", "en": "Accessories"},
   ];
 
-  // قائمة المنتجات التجريبية
   final List<Map<String, dynamic>> allProducts = [
     {
       "id": "1",
       "title": "iPhone 15 Pro Max",
-      "category": "أجهزة",
+      "category": "الأجهزة",
       "categoryEn": "Devices",
       "price": "4,500 ₪",
       "oldPrice": "4,800 ₪",
@@ -55,7 +48,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     {
       "id": "2",
       "title": "Samsung S24 Ultra",
-      "category": "أجهزة",
+      "category": "الأجهزة",
       "categoryEn": "Devices",
       "price": "3,800 ₪",
       "oldPrice": "4,100 ₪",
@@ -88,7 +81,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     {
       "id": "5",
       "title": "AirPods Pro 2",
-      "category": "إكسسوارات",
+      "category": "إكسسوار",
       "categoryEn": "Accessories",
       "price": "850 ₪",
       "oldPrice": "950 ₪",
@@ -99,7 +92,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     {
       "id": "6",
       "title": "MacBook Pro M3",
-      "category": "أجهزة",
+      "category": "الأجهزة",
       "categoryEn": "Devices",
       "price": "6,200 ₪",
       "oldPrice": null,
@@ -110,6 +103,20 @@ class _ProductsScreenState extends State<ProductsScreen> {
   ];
 
   @override
+  void initState() {
+    super.initState();
+    isDarkMode = widget.isDarkMode;
+    currentLocale = widget.currentLocale;
+
+    if (widget.initialCategory != null) {
+      final index = categories.indexWhere((cat) => cat["ar"] == widget.initialCategory);
+      if (index != -1) {
+        selectedCategoryIndex = index;
+      }
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final isArabic = currentLocale == 'ar';
     final backgroundColor = isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
@@ -117,7 +124,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
     final textColor = isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark;
     final textMutedColor = isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
-    // تصفية المنتجات بناءً على الفئة وبحث المستخدم
     final filteredProducts = allProducts.where((product) {
       final matchesCategory = selectedCategoryIndex == 0 ||
           product["category"] == categories[selectedCategoryIndex]["ar"];
@@ -130,7 +136,6 @@ class _ProductsScreenState extends State<ProductsScreen> {
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: backgroundColor,
-
         appBar: AppBar(
           backgroundColor: backgroundColor,
           elevation: 0,
@@ -181,11 +186,9 @@ class _ProductsScreenState extends State<ProductsScreen> {
             ),
           ],
         ),
-
         body: Column(
           children: [
             const SizedBox(height: 10),
-
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20.0),
               child: Container(
@@ -213,9 +216,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 ),
               ),
             ),
-
             const SizedBox(height: 16),
-
             SizedBox(
               height: 40,
               child: ListView.builder(
@@ -265,9 +266,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
                 },
               ),
             ),
-
             const SizedBox(height: 20),
-
             Expanded(
               child: filteredProducts.isEmpty
                   ? Center(

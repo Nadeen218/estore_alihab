@@ -8,6 +8,7 @@ class FeaturedProducts extends StatelessWidget {
   final Color cardBg;
   final Color textMain;
   final String currentLocale;
+  final Function(VoidCallback) onCheckLogin;
 
   const FeaturedProducts({
     Key? key,
@@ -15,6 +16,7 @@ class FeaturedProducts extends StatelessWidget {
     required this.cardBg,
     required this.textMain,
     required this.currentLocale,
+    required this.onCheckLogin,
   }) : super(key: key);
 
   @override
@@ -59,15 +61,17 @@ class FeaturedProducts extends StatelessWidget {
               ),
               GestureDetector(
                 onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductsScreen(
-                        isDarkMode: isDarkMode,
-                        currentLocale: currentLocale,
+                  onCheckLogin(() {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProductsScreen(
+                          isDarkMode: isDarkMode,
+                          currentLocale: currentLocale,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  });
                 },
                 child: Text(
                   isArabic ? "عرض الكل" : "See All",
@@ -89,17 +93,18 @@ class FeaturedProducts extends StatelessWidget {
               final prod = products[index];
               return GestureDetector(
                 onTap: () {
-                  // الانتقال لشاشة تفاصيل المنتج
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => ProductDetailsScreen(
-                        product: prod,
-                        isDarkMode: isDarkMode,
-                        currentLocale: currentLocale,
+                  onCheckLogin(() {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => ProductDetailsScreen(
+                          product: prod,
+                          isDarkMode: isDarkMode,
+                          currentLocale: currentLocale,
+                        ),
                       ),
-                    ),
-                  );
+                    );
+                  });
                 },
                 child: Container(
                   width: 155,
