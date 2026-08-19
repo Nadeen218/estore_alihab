@@ -12,6 +12,7 @@ import '../product/product_details_screen.dart';
 import '../track/track_order_screen.dart';
 import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
+import '../auth/profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool? isDarkMode;
@@ -330,7 +331,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                 ),
                 const SizedBox(height: 28),
-
                 FeaturedProducts(
                   isDarkMode: isDarkMode,
                   cardBg: cardColor,
@@ -340,7 +340,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     _checkLoginAndExecute(action);
                   },
                 ),
-
                 const SizedBox(height: 100),
               ],
             ),
@@ -411,8 +410,23 @@ class _HomeScreenState extends State<HomeScreen> {
               });
             } else if (index == 3) {
               _checkLoginAndExecute(() {
-                setState(() {
-                  _currentIndex = index;
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ProfileScreen(
+                      isDarkMode: isDarkMode,
+                      currentLocale: currentLocale,
+                      onLogout: () {
+                        setState(() {
+                          _isLoggedIn = false;
+                        });
+                      },
+                    ),
+                  ),
+                ).then((result) {
+                  setState(() {
+                    _currentIndex = 0;
+                  });
                 });
               });
             }
