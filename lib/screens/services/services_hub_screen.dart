@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'maintenance_screen.dart';
 import 'fiber_screen.dart';
+import 'sim_screen.dart';
 class ServicesHubScreen extends StatelessWidget {
   final bool isDarkMode;
   final String currentLocale;
@@ -81,7 +82,17 @@ class ServicesHubScreen extends StatelessWidget {
               cardColor: cardColor,
               textColor: textColor,
               textMuted: textMuted,
-              onTap: () {},
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => SimScreen(
+                      isDarkMode: isDarkMode,
+                      currentLocale: currentLocale,
+                    ),
+                  ),
+                );
+              },
             ),
             const SizedBox(height: 14),
             _buildServiceCard(
