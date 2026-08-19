@@ -143,10 +143,36 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final cardColor = widget.isDarkMode ? AppColors.darkBackgroundSecondary : AppColors.lightBackgroundSecondary;
     final textColor = widget.isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark;
 
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      body: SafeArea(
-        child: SingleChildScrollView(
+    return Directionality(
+      textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          backgroundColor: backgroundColor,
+          elevation: 0,
+          scrolledUnderElevation: 0,
+          leading: IconButton(
+            icon: Icon(
+              isArabic
+                  ? Icons.arrow_forward_ios_rounded
+                  : Icons.arrow_back_ios_new_rounded,
+              color: textColor,
+              size: 20,
+            ),
+            onPressed: () => Navigator.pop(context),
+          ),
+          centerTitle: true,
+          title: Text(
+            isArabic ? "الملف الشخصي" : "Profile",
+            style: TextStyle(
+              color: textColor,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              fontFamily: 'Cairo',
+            ),
+          ),
+        ),
+        body: SingleChildScrollView(
           child: Column(
             children: [
               Container(
@@ -230,6 +256,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: isArabic ? "عناوينّي" : "My Addresses",
                       cardColor: cardColor,
                       textColor: textColor,
+                      isArabic: isArabic,
                       onTap: () => _showAddressesSheet(isArabic),
                     ),
                     _buildProfileOption(
@@ -239,6 +266,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       title: isArabic ? "سجل طلباتي" : "Order History",
                       cardColor: cardColor,
                       textColor: textColor,
+                      isArabic: isArabic,
                       onTap: () => _showOrderHistorySheet(isArabic),
                     ),
                     const SizedBox(height: 10),
@@ -250,6 +278,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       cardColor: cardColor,
                       textColor: Colors.redAccent,
                       isLogout: true,
+                      isArabic: isArabic,
                       onTap: () {
                         widget.onLogout();
                         Navigator.pop(context);
@@ -299,6 +328,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     required Color cardColor,
     required Color textColor,
     required VoidCallback onTap,
+    required bool isArabic,
     bool isLogout = false,
   }) {
     return Container(
@@ -325,9 +355,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
             fontSize: 14,
           ),
         ),
-        trailing: Icon(
-          Icons.chevron_left_rounded,
-          color: isLogout ? Colors.transparent : textColor.withOpacity(0.4),
+        trailing: isLogout
+            ? null
+            : Icon(
+          isArabic
+              ? Icons.chevron_left_rounded
+              : Icons.chevron_right_rounded,
+          color: textColor.withOpacity(0.4),
         ),
         onTap: onTap,
       ),

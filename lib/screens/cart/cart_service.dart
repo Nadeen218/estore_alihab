@@ -22,6 +22,11 @@ class CartService {
   static final ValueNotifier<List<CartItem>> cartItemsNotifier =
   ValueNotifier<List<CartItem>>([]);
 
+  static final ValueNotifier<int> ordersCountNotifier = ValueNotifier<int>(0);
+
+  static final ValueNotifier<List<Map<String, dynamic>>> orderHistoryNotifier =
+  ValueNotifier<List<Map<String, dynamic>>>([]);
+
   static List<CartItem> get items => cartItemsNotifier.value;
 
   static void addToCart(
@@ -100,6 +105,30 @@ class CartService {
         cartItemsNotifier.value = currentList;
       }
     }
+  }
+
+  static void checkoutOrder() {
+    if (cartItemsNotifier.value.isEmpty) return;
+
+    List<Map<String, dynamic>> currentHistory = List.from(orderHistoryNotifier.value);
+
+    for (var cartItem in cartItemsNotifier.value) {
+      int existingIndex = currentHistory.indexWhere((h) => h["nameAr"] == cartItem.title || h["nameEn"] == cartItem.title);
+
+      if (existingIndex >= 0) {
+        currentHistory[existingIndex]["count"] += cartItem.quantity;
+      } else {
+        currentHistory.add({
+          "nameAr": cartItem.title,
+          "nameEn": cartItem.title,
+          "count": cartItem.quantity,
+        });
+      }
+    }
+
+    orderHistoryNotifier.value = currentHistory;
+    ordersCountNotifier.value += 1;
+    clearCart();
   }
 
   static void clearCart() {

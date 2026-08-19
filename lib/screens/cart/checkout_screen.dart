@@ -1,4 +1,4 @@
-import 'dart:math'; // لإعادة توليد رقم طلب عشوائي
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'cart_service.dart';
@@ -32,10 +32,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   double get totalPrice => widget.subtotal + widget.deliveryFee;
 
-  // توليد رقم طلب عشوائي فريد
   String _generateOrderId() {
     final random = Random();
-    final randomNumber = 10000 + random.nextInt(90000); // رقم من 5 خانات
+    final randomNumber = 10000 + random.nextInt(90000);
     return "ES-$randomNumber";
   }
 
@@ -121,7 +120,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                   ),
                 ),
                 const SizedBox(height: 6),
-                // عرض رقم الطلب للمستخدم
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
@@ -166,18 +164,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       elevation: 0,
                     ),
                     onPressed: () {
-                      CartService.clearCart();
+                      CartService.checkoutOrder();
                       Navigator.pop(dialogContext);
 
-                      // التوجه لشاشة التتبع وتمرير رقم الطلب والهاتف تلقائياً
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(
                           builder: (context) => TrackOrderScreen(
                             isDarkMode: widget.isDarkMode,
                             currentLocale: widget.currentLocale,
-                              initialOrderId: orderId,
-                              initialPhoneNumber: phoneNumber,
+                            initialOrderId: orderId,
+                            initialPhoneNumber: phoneNumber,
                           ),
                         ),
                             (route) => false,
@@ -311,9 +308,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
                     Text(
                       isArabic ? "طريقة الدفع" : "Payment Method",
                       style: TextStyle(
@@ -324,7 +319,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-
                     _buildPaymentOption(
                       index: 0,
                       title: isArabic
@@ -338,9 +332,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       textColor: textColor,
                       textMutedColor: textMutedColor,
                     ),
-
                     const SizedBox(height: 10),
-
                     _buildPaymentOption(
                       index: 1,
                       title: isArabic
@@ -354,9 +346,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       textColor: textColor,
                       textMutedColor: textMutedColor,
                     ),
-
                     const SizedBox(height: 24),
-
                     Text(
                       isArabic ? "ملخص الفاتورة" : "Order Summary",
                       style: TextStyle(
@@ -455,7 +445,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                 ),
               ),
             ),
-
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
