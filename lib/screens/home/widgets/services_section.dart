@@ -7,6 +7,8 @@ class ServicesSection extends StatelessWidget {
   final Color textMain;
   final Color textSub;
   final String currentLocale;
+  final VoidCallback? onSimTap;
+  final VoidCallback? onFiberTap;
 
   const ServicesSection({
     Key? key,
@@ -15,6 +17,8 @@ class ServicesSection extends StatelessWidget {
     required this.textMain,
     required this.textSub,
     required this.currentLocale,
+    this.onSimTap,
+    this.onFiberTap,
   }) : super(key: key);
 
   @override
@@ -46,20 +50,26 @@ class ServicesSection extends StatelessWidget {
           child: Row(
             children: [
               Expanded(
-                child: _buildServiceItem(
-                  isArabic ? "شرائح الاتصال" : "SIM Cards",
-                  isArabic ? "احصل على شريحتك فوراً" : "Get your SIM card now",
-                  Icons.sim_card_outlined,
-                  AppColors.accentGold,
+                child: GestureDetector(
+                  onTap: onSimTap,
+                  child: _buildServiceItem(
+                    isArabic ? "شرائح الاتصال" : "SIM Cards",
+                    isArabic ? "احصل على شريحتك فوراً" : "Get your SIM card now",
+                    Icons.sim_card_outlined,
+                    AppColors.accentGold,
+                  ),
                 ),
               ),
               const SizedBox(width: 14),
               Expanded(
-                child: _buildServiceItem(
-                  isArabic ? "جوال فايبر" : "Jawwal Fiber",
-                  isArabic ? "سرعة إنترنت مذهلة" : "Super fast internet",
-                  Icons.bolt_rounded,
-                  AppColors.accentBlue,
+                child: GestureDetector(
+                  onTap: onFiberTap,
+                  child: _buildServiceItem(
+                    isArabic ? "جوال فايبر" : "Jawwal Fiber",
+                    isArabic ? "سرعة إنترنت مذهلة" : "Super fast internet",
+                    Icons.bolt_rounded,
+                    AppColors.accentBlue,
+                  ),
                 ),
               ),
             ],

@@ -13,6 +13,8 @@ import '../auth/login_screen.dart';
 import '../auth/register_screen.dart';
 import '../auth/profile_screen.dart';
 import '../services/services_hub_screen.dart';
+import '../services/sim_screen.dart';
+import '../services/fiber_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool? isDarkMode;
@@ -195,6 +197,32 @@ class _HomeScreenState extends State<HomeScreen> {
                   textMain: textColor,
                   textSub: textMutedColor,
                   currentLocale: currentLocale,
+                  onSimTap: () {
+                    _checkLoginAndExecute(() {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => SimScreen(
+                            isDarkMode: isDarkMode,
+                            currentLocale: currentLocale,
+                          ),
+                        ),
+                      );
+                    });
+                  },
+                  onFiberTap: () {
+                    _checkLoginAndExecute(() {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => FiberScreen(
+                            isDarkMode: isDarkMode,
+                            currentLocale: currentLocale,
+                          ),
+                        ),
+                      );
+                    });
+                  },
                 ),
                 const SizedBox(height: 20),
                 TrackOrderCard(
