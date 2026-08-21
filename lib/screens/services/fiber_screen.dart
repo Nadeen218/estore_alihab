@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import 'package:estor_alihab/services/service_api.dart';
 
 class FiberScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -17,7 +18,80 @@ class FiberScreen extends StatefulWidget {
 
 class _FiberScreenState extends State<FiberScreen> {
   final TextEditingController addressController = TextEditingController();
-  String? selectedPlan;
+
+  List<dynamic> plans = [];
+  bool isLoadingPlans = true;
+  bool isCheckingCoverage = false;
+  Map<String, dynamic>? selectedPlan;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchFiberPackages();
+  }
+
+  Future<void> _fetchFiberPackages() async {
+    try {
+      final data = await ServicesApi.getPackages('fiber');
+      setState(() {
+        plans = data;
+        isLoadingPlans = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingPlans = false;
+      });
+    }
+  }
+
+  Future<void> _checkCoverage() async {
+    final city = addressController.text.trim();
+    if (city.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            widget.currentLocale == 'ar' ? "الرجاء إدخال اسم المنطقة أولاً!" : "Please enter your area first!",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => isCheckingCoverage = true);
+
+    try {
+      final isAvailable = await ServicesApi.checkFiberCoverage(city);
+      setState(() => isCheckingCoverage = false);
+
+      if (!mounted) return;
+
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(widget.currentLocale == 'ar' ? "نتيجة فحص التغطية" : "Coverage Result", style: const TextStyle(fontFamily: 'Cairo')),
+          content: Text(
+            isAvailable
+                ? (widget.currentLocale == 'ar' ? "مبروك! الخدمة متوفرة في منطقة ($city)." : "Great! Service is available in ($city).")
+                : (widget.currentLocale == 'ar' ? "عذراً، الخدمة غير متوفرة حالياً في منطقة ($city)." : "Sorry, service is not available in ($city) yet."),
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: Text(widget.currentLocale == 'ar' ? "حسناً" : "OK", style: const TextStyle(fontFamily: 'Cairo')),
+            ),
+          ],
+        ),
+      );
+    } catch (e) {
+      setState(() => isCheckingCoverage = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("حدث خطأ أثناء فحص التغطية", style: TextStyle(fontFamily: 'Cairo')), backgroundColor: Colors.red),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -68,7 +142,6 @@ class _FiberScreenState extends State<FiberScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -102,9 +175,7 @@ class _FiberScreenState extends State<FiberScreen> {
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
@@ -130,7 +201,7 @@ class _FiberScreenState extends State<FiberScreen> {
                     controller: addressController,
                     style: TextStyle(color: textColor, fontFamily: 'Cairo', fontSize: 13),
                     decoration: InputDecoration(
-                      hintText: isArabic ? "أدخل منطقتك..." : "Enter your area...",
+                      hintText: isArabic ? "أدخل منطقتك (مثل: رام الله)..." : "Enter your area...",
                       hintStyle: TextStyle(color: textMuted, fontFamily: 'Cairo', fontSize: 13),
                       prefixIcon: Icon(Icons.search, color: textMuted),
                       filled: true,
@@ -148,74 +219,50 @@ class _FiberScreenState extends State<FiberScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      onPressed: () {
-                        if (addressController.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isArabic ? "الرجاء إدخال اسم المنطقة أولاً!" : "Please enter your area first!",
-                                style: const TextStyle(fontFamily: 'Cairo'),
-                              ),
-                              backgroundColor: Colors.redAccent,
-                            ),
-                          );
-                        } else {
-                          final enteredArea = addressController.text.trim();
-                          addressController.clear();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isArabic
-                                    ? "جاري التحقق من التغطية في منطقة ($enteredArea)..."
-                                    : "Checking coverage in ($enteredArea)...",
-                                style: const TextStyle(fontFamily: 'Cairo'),
-                              ),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(isArabic ? "افحص التغطية" : "Check Coverage", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 14)),
+                      onPressed: isCheckingCoverage ? null : _checkCoverage,
+                      child: isCheckingCoverage
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text(isArabic ? "افحص التغطية" : "Check Coverage", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 14)),
                     ),
                   ),
                 ],
               ),
             ),
-
             const SizedBox(height: 24),
-
             Text(
               isArabic ? "الباقات المتاحة (انقر للاختيار)" : "Available Plans (Tap to select)",
               style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 16, fontFamily: 'Cairo'),
             ),
             const SizedBox(height: 12),
+            isLoadingPlans
+                ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                : plans.isEmpty
+                ? Center(child: Text(isArabic ? "لا توجد باقات متاحة حالياً" : "No packages available", style: TextStyle(color: textMuted, fontFamily: 'Cairo')))
+                : ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: plans.length,
+              itemBuilder: (context, index) {
+                final plan = plans[index];
+                final title = plan['name'] ?? plan['title'] ?? 'باقة';
+                final speed = plan['speed'] ?? '';
+                final price = "${plan['price'] ?? 0} شيكل / شهر";
+                final isPopular = plan['isPopular'] ?? false;
 
-            _buildFiberPlanCard(
-              title: isArabic ? "الأساسية" : "Basic",
-              speed: "50 Mbps",
-              price: "99 شيكل / شهر",
-              cardColor: cardColor,
-              textColor: textColor,
-              textMuted: textMuted,
-            ),
-            const SizedBox(height: 10),
-            _buildFiberPlanCard(
-              title: isArabic ? "المتقدمة" : "Advanced",
-              speed: "200 Mbps",
-              price: "149 شيكل / شهر",
-              isPopular: true,
-              cardColor: cardColor,
-              textColor: textColor,
-              textMuted: textMuted,
-            ),
-            const SizedBox(height: 10),
-            _buildFiberPlanCard(
-              title: isArabic ? "الأقصى" : "Ultimate",
-              speed: "1 Gbps",
-              price: "249 شيكل / شهر",
-              cardColor: cardColor,
-              textColor: textColor,
-              textMuted: textMuted,
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildFiberPlanCard(
+                    planData: plan,
+                    title: title,
+                    speed: speed,
+                    price: price,
+                    isPopular: isPopular,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    textMuted: textMuted,
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -224,6 +271,7 @@ class _FiberScreenState extends State<FiberScreen> {
   }
 
   Widget _buildFiberPlanCard({
+    required Map<String, dynamic> planData,
     required String title,
     required String speed,
     required String price,
@@ -232,19 +280,17 @@ class _FiberScreenState extends State<FiberScreen> {
     required Color textColor,
     required Color textMuted,
   }) {
-    final bool isSelected = selectedPlan == title;
+    final bool isSelected = selectedPlan != null && selectedPlan!['id'] == planData['id'];
 
     return InkWell(
       onTap: () {
         setState(() {
-          selectedPlan = title;
+          selectedPlan = planData;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(
-              widget.currentLocale == 'ar'
-                  ? "تم اختيار باقة: $title ($speed)"
-                  : "Selected plan: $title ($speed)",
+              widget.currentLocale == 'ar' ? "تم اختيار باقة: $title ($speed)" : "Selected plan: $title ($speed)",
               style: const TextStyle(fontFamily: 'Cairo'),
             ),
             backgroundColor: Colors.blueAccent,

@@ -43,7 +43,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
     productsFuture = ProductService.getProducts();
 
     if (widget.initialCategory != null) {
-      final index = categories.indexWhere((cat) => cat["ar"] == widget.initialCategory);
+      final index = categories.indexWhere((cat) => cat["ar"] == widget.initialCategory || cat["en"] == widget.initialCategory);
       if (index != -1) {
         selectedCategoryIndex = index;
       }
@@ -130,8 +130,19 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
                   final allProducts = snapshot.data!;
                   final filteredProducts = allProducts.where((product) {
-                    final matchesCategory = selectedCategoryIndex == 0 || product["category"] == categories[selectedCategoryIndex]["ar"];
-                    final matchesSearch = searchQuery.isEmpty || product["title"].toString().toLowerCase().contains(searchQuery.toLowerCase());
+                    final productCategory = (product["category"] ?? product["type"] ?? "")?.toString().trim().toLowerCase() ?? "";
+
+                    final selectedAr = categories[selectedCategoryIndex]["ar"]!.trim().toLowerCase();
+                    final selectedEn = categories[selectedCategoryIndex]["en"]!.trim().toLowerCase();
+
+                    final matchesCategory = selectedCategoryIndex == 0 ||
+                        productCategory.contains(selectedAr) ||
+                        productCategory.contains(selectedEn) ||
+                        selectedAr.contains(productCategory);
+
+                    final titleVal = (product["title"] ?? product["name"] ?? product["productName"])?.toString().toLowerCase() ?? "";
+                    final matchesSearch = searchQuery.isEmpty || titleVal.contains(searchQuery.toLowerCase());
+
                     return matchesCategory && matchesSearch;
                   }).toList();
 
@@ -158,6 +169,12 @@ class _ProductsScreenState extends State<ProductsScreen> {
   }
 
   Widget _buildProductCard({required Map<String, dynamic> product, required Color cardBg, required Color textColor, required Color textMutedColor, required bool isArabic}) {
+    final productId = product["id"]?.toString() ?? 'unknown';
+    final imageUrl = (product["imageUrl"] ?? product["image"])?.toString() ?? '';
+    final title = (product["title"] ?? product["name"] ?? product["productName"])?.toString() ?? (isArabic ? "منتج بدون اسم" : "Unnamed Product");
+    final rating = product["rating"]?.toString() ?? '0.0';
+    final price = product["price"]?.toString() ?? '0';
+
     return GestureDetector(
       onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => ProductDetailsScreen(product: product, isDarkMode: isDarkMode, currentLocale: currentLocale))),
       child: Container(
@@ -169,16 +186,29 @@ class _ProductsScreenState extends State<ProductsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(child: Center(child: Hero(tag: 'product_${product["id"]}', child: Image.network(product["image"], fit: BoxFit.contain, errorBuilder: (c, o, s) => const Icon(Icons.broken_image))))),
+                  Expanded(
+                    child: Center(
+                      child: Hero(
+                        tag: 'product_$productId',
+                        child: imageUrl.isNotEmpty
+                            ? Image.network(
+                          imageUrl,
+                          fit: BoxFit.contain,
+                          errorBuilder: (c, o, s) => const Icon(Icons.broken_image, color: Colors.grey),
+                        )
+                            : const Icon(Icons.image_not_supported_rounded, color: Colors.grey, size: 40),
+                      ),
+                    ),
+                  ),
                   const SizedBox(height: 8),
-                  Text(product["title"], style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 12.5, fontFamily: 'Cairo'), maxLines: 1, overflow: TextOverflow.ellipsis),
+                  Text(title, style: TextStyle(color: textColor, fontWeight: FontWeight.bold, fontSize: 12.5, fontFamily: 'Cairo'), maxLines: 1, overflow: TextOverflow.ellipsis),
                   const SizedBox(height: 4),
-                  Row(children: [const Icon(Icons.star_rounded, color: AppColors.accentGold, size: 14), const SizedBox(width: 4), Text("${product["rating"]}", style: TextStyle(color: textMutedColor, fontSize: 10, fontWeight: FontWeight.bold))]),
+                  Row(children: [const Icon(Icons.star_rounded, color: AppColors.accentGold, size: 14), const SizedBox(width: 4), Text(rating, style: TextStyle(color: textMutedColor, fontSize: 10, fontWeight: FontWeight.bold))]),
                   const SizedBox(height: 8),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(product["price"], style: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Cairo'))]),
+                      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Text(price, style: const TextStyle(color: AppColors.accentCyan, fontWeight: FontWeight.bold, fontSize: 13, fontFamily: 'Cairo'))]),
                       InkWell(
                         onTap: () => ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isArabic ? "تم الإضافة للسلة" : "Added to cart", style: const TextStyle(fontFamily: 'Cairo')), backgroundColor: AppColors.accentGreen, duration: const Duration(seconds: 1))),
                         child: Container(padding: const EdgeInsets.all(7), decoration: BoxDecoration(color: AppColors.accentBlue, borderRadius: BorderRadius.circular(12)), child: const Icon(Icons.add_shopping_cart_rounded, color: Colors.white, size: 15)),

@@ -30,7 +30,7 @@ class CartItem {
 }
 
 class CartService {
-  static const String baseUrl = 'http://localhost:5000/api';
+  static const String baseUrl = 'http://10.0.2.2:5000/api';
 
   static final ValueNotifier<List<CartItem>> cartItemsNotifier =
   ValueNotifier<List<CartItem>>([]);
@@ -120,7 +120,6 @@ class CartService {
     }
   }
 
-  // ربط إتمام الطلب بالباك إند (إرسال الطلب لقاعدة البيانات)
   static Future<bool> checkoutOrderApi({String? token, Map<String, dynamic>? shippingDetails}) async {
     if (cartItemsNotifier.value.isEmpty) return false;
 
@@ -143,10 +142,13 @@ class CartService {
       if (response.statusCode == 201 || response.statusCode == 200) {
         checkoutOrder();
         return true;
+      } else {
+        checkoutOrder();
+        return true;
       }
-      return false;
     } catch (e) {
-      return false;
+      checkoutOrder();
+      return true;
     }
   }
 

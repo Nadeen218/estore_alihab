@@ -31,10 +31,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
 
   final List<String> storageOptions = ["128 GB", "256 GB", "512 GB", "1 TB"];
   final List<Color> colorOptions = [
-    const Color(0xFF333333), // اسود غامق
-    const Color(0xFFE0E0E0), // فضي
-    const Color(0xFF4A5568), // تيتانيوم
-    const Color(0xFFD4AF37), // ذهبي
+    const Color(0xFF333333),
+    const Color(0xFFE0E0E0),
+    const Color(0xFF4A5568),
+    const Color(0xFFD4AF37),
   ];
 
   @override
@@ -52,18 +52,19 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final textColor = isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark;
     final textMutedColor = isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted;
 
-    final String title = widget.product["title"] ?? "اسم المنتج";
-    final String price = widget.product["price"] ?? "0 ₪";
-    final String? oldPrice = widget.product["oldPrice"];
-    final double rating = (widget.product["rating"] ?? 5.0).toDouble();
-    final String image = widget.product["image"] ?? "";
+    final String title = (widget.product["title"] ?? widget.product["name"] ?? "اسم المنتج").toString();
+    final String price = (widget.product["price"] ?? "0").toString();
+    final String? oldPrice = widget.product["oldPrice"]?.toString();
+
+    final double rating = double.tryParse((widget.product["rating"] ?? "5.0").toString()) ?? 5.0;
+    final String image = (widget.product["imageUrl"] ?? widget.product["image"] ?? "").toString();
+    final String productId = (widget.product["id"] ?? widget.product["_id"] ?? 'unknown').toString();
+    final String description = (widget.product["description"] ?? "").toString();
 
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
       child: Scaffold(
         backgroundColor: backgroundColor,
-
-        // 1. الهيدر العلوي
         appBar: AppBar(
           backgroundColor: backgroundColor,
           elevation: 0,
@@ -103,13 +104,10 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
             ),
             IconButton(
               icon: const Icon(Icons.favorite_border_rounded, color: Colors.redAccent),
-              onPressed: () {
-                // إشارة الإضافة للمفضلة
-              },
+              onPressed: () {},
             ),
           ],
         ),
-
         body: Column(
           children: [
             Expanded(
@@ -119,7 +117,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // عرض صورة المنتج المميزة
                     Container(
                       height: 250,
                       width: double.infinity,
@@ -132,21 +129,20 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                       ),
                       child: Center(
                         child: Hero(
-                          tag: 'product_${widget.product["id"]}',
-                          child: Image.network(
+                          tag: 'product_$productId',
+                          child: image.isNotEmpty
+                              ? Image.network(
                             image,
                             height: 180,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) =>
-                            const Icon(Icons.phone_android, size: 80, color: Colors.grey),
-                          ),
+                            const Icon(Icons.broken_image, size: 80, color: Colors.grey),
+                          )
+                              : const Icon(Icons.phone_android, size: 80, color: Colors.grey),
                         ),
                       ),
                     ),
-
                     const SizedBox(height: 24),
-
-                    // اسم المنتج والتقييم
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -185,14 +181,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         ),
                       ],
                     ),
-
                     const SizedBox(height: 8),
-
-                    // السعر والخصم إن وجد
                     Row(
                       children: [
                         Text(
-                          price,
+                          "$price \$",
                           style: const TextStyle(
                             color: AppColors.accentCyan,
                             fontSize: 20,
@@ -203,7 +196,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         if (oldPrice != null) ...[
                           const SizedBox(width: 12),
                           Text(
-                            oldPrice,
+                            "$oldPrice \$",
                             style: TextStyle(
                               color: textMutedColor,
                               fontSize: 14,
@@ -214,12 +207,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         ],
                       ],
                     ),
-
                     const SizedBox(height: 20),
                     Divider(color: textMutedColor.withOpacity(0.2)),
                     const SizedBox(height: 16),
-
-                    // اختيار السعة
                     Text(
                       isArabic ? "السعة التخزينية:" : "Storage Capacity:",
                       style: TextStyle(
@@ -267,10 +257,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         );
                       }),
                     ),
-
                     const SizedBox(height: 20),
-
-                    // اختيار اللون
                     Text(
                       isArabic ? "اختر اللون:" : "Select Color:",
                       style: TextStyle(
@@ -308,10 +295,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         );
                       }),
                     ),
-
                     const SizedBox(height: 24),
-
-                    // الوصف والتفاصيل
                     Text(
                       isArabic ? "الوصف والمواصفات:" : "Description & Specs:",
                       style: TextStyle(
@@ -323,9 +307,11 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      isArabic
-                          ? "جهاز ممتاز بمواصفات عالية، كفالة رسمية من الوكيل المعتمد ' الإيهاب لخدمات الاتصال'. كفالة شاملة للقطع والأجهزة الملحقة."
-                          : "High performance device with official warranty provided by 'Estor Al-Ehab' authorized retailer.",
+                      description.isNotEmpty
+                          ? description
+                          : (isArabic
+                          ? "جهاز ممتاز بمواصفات عالية، كفالة رسمية من الوكيل المعتمد 'الإيهاب لخدمات الاتصال'."
+                          : "High performance device with official warranty."),
                       style: TextStyle(
                         color: textMutedColor,
                         fontSize: 13,
@@ -338,8 +324,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                 ),
               ),
             ),
-
-            // الشريط السفلي لإضافة الكمية والسلة
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
               decoration: BoxDecoration(
@@ -359,7 +343,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
               child: SafeArea(
                 child: Row(
                   children: [
-                    // العداد (Quantity)
                     Container(
                       decoration: BoxDecoration(
                         color: backgroundColor,
@@ -396,9 +379,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         ],
                       ),
                     ),
-
                     const SizedBox(width: 16),
-
                     Expanded(
                       child: ElevatedButton(
                         style: ElevatedButton.styleFrom(
@@ -410,7 +391,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           elevation: 0,
                         ),
                         onPressed: () {
-                          // إضافة المنتج بالخدمة
                           CartService.addToCart(
                             widget.product,
                             quantity: quantity,
