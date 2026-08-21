@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:estor_alihab/app_colors.dart';
 import '../home/home_screen.dart';
 
@@ -28,6 +30,9 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
   late bool _isLoggedIn;
 
   bool _hasSearched = false;
+  bool _isLoading = false;
+  Map<String, dynamic>? _orderDetails;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -37,7 +42,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
     _phoneController = TextEditingController(text: widget.initialPhoneNumber ?? '');
 
     if (_orderIdController.text.isNotEmpty && _phoneController.text.isNotEmpty) {
-      _hasSearched = true;
+      _handleSearch();
     }
   }
 
@@ -64,7 +69,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
     );
   }
 
-  void _handleSearch() {
+  Future<void> _handleSearch() async {
     FocusScope.of(context).unfocus();
 
     final orderId = _orderIdController.text.trim();
@@ -94,7 +99,32 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
 
     setState(() {
       _hasSearched = true;
+      _isLoading = true;
+      _errorMessage = null;
     });
+
+    try {
+      final response = await http.get(
+        Uri.parse('http://localhost:5000/api/orders/track?orderId=$orderId&phone=$phone'),
+      );
+
+      if (response.statusCode == 200) {
+        setState(() {
+          _orderDetails = json.decode(response.body);
+          _isLoading = false;
+        });
+      } else {
+        setState(() {
+          _errorMessage = isArabic ? "لم يتم العثور على الطلب" : "Order not found";
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = isArabic ? "خطأ في الاتصال بالخادم" : "Server connection error";
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -258,7 +288,28 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                       color: cardColor,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Column(
+                    child: _isLoading
+                        ? const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(20.0),
+                        child: CircularProgressIndicator(),
+                      ),
+                    )
+                        : _errorMessage != null
+                        ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(
+                            color: Colors.redAccent,
+                            fontFamily: 'Cairo',
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    )
+                        : Column(
                       children: [
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -296,7 +347,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                                   const Icon(Icons.local_shipping, size: 12, color: Color(0xFF15803D)),
                                   const SizedBox(width: 4),
                                   Text(
-                                    isArabic ? "في الطريق" : "On the way",
+                                    _orderDetails?['status'] ?? (isArabic ? "في الطريق" : "On the way"),
                                     style: const TextStyle(
                                       color: Color(0xFF15803D),
                                       fontWeight: FontWeight.bold,
