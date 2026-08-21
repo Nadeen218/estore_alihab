@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import 'package:estor_alihab/services/auth_service.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -28,10 +29,39 @@ class ProfileScreen extends StatefulWidget {
 }
 
 class _ProfileScreenState extends State<ProfileScreen> {
+  String userName = "";
+  String userEmail = "";
+  bool _isLoadingUser = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    try {
+      final data = await AuthService.getUserData();
+      if (!mounted) return;
+      setState(() {
+        userName = data?['name'] ?? '';
+        userEmail = data?['email'] ?? '';
+        _isLoadingUser = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isLoadingUser = false;
+      });
+    }
+  }
+
   void _showAddressesSheet(bool isArabic) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: widget.isDarkMode ? AppColors.darkBackgroundSecondary : AppColors.lightBackgroundSecondary,
+      backgroundColor: widget.isDarkMode
+          ? AppColors.darkBackgroundSecondary
+          : AppColors.lightBackgroundSecondary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -47,7 +77,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontFamily: 'Cairo',
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: widget.isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
+                color: widget.isDarkMode
+                    ? AppColors.darkTextLight
+                    : AppColors.lightTextDark,
               ),
             ),
             const SizedBox(height: 16),
@@ -57,12 +89,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 isArabic ? widget.userAddressAr : widget.userAddressEn,
                 style: TextStyle(
                   fontFamily: 'Cairo',
-                  color: widget.isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
+                  color: widget.isDarkMode
+                      ? AppColors.darkTextLight
+                      : AppColors.lightTextDark,
                 ),
               ),
               subtitle: Text(
                 isArabic ? "العنوان الرئيسي" : "Default Address",
-                style: TextStyle(fontFamily: 'Cairo', fontSize: 12, color: widget.isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted),
+                style: TextStyle(
+                  fontFamily: 'Cairo',
+                  fontSize: 12,
+                  color: widget.isDarkMode
+                      ? AppColors.darkTextMuted
+                      : AppColors.lightTextMuted,
+                ),
               ),
             ),
             const SizedBox(height: 20),
@@ -75,7 +115,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
   void _showOrderHistorySheet(bool isArabic) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: widget.isDarkMode ? AppColors.darkBackgroundSecondary : AppColors.lightBackgroundSecondary,
+      backgroundColor: widget.isDarkMode
+          ? AppColors.darkBackgroundSecondary
+          : AppColors.lightBackgroundSecondary,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
@@ -91,7 +133,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 fontFamily: 'Cairo',
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: widget.isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
+                color: widget.isDarkMode
+                    ? AppColors.darkTextLight
+                    : AppColors.lightTextDark,
               ),
             ),
             const SizedBox(height: 16),
@@ -103,7 +147,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   isArabic ? "لا توجد طلبات سابقة" : "No previous orders",
                   style: TextStyle(
                     fontFamily: 'Cairo',
-                    color: widget.isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted,
+                    color: widget.isDarkMode
+                        ? AppColors.darkTextMuted
+                        : AppColors.lightTextMuted,
                   ),
                 ),
               ),
@@ -112,16 +158,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
               children: widget.orderHistory.map((order) => ListTile(
                 leading: const Icon(Icons.inventory_2_outlined, color: Colors.amber),
                 title: Text(
-                  isArabic ? order["nameAr"] : order["nameEn"],
+                  isArabic ? (order["nameAr"] ?? '') : (order["nameEn"] ?? ''),
                   style: TextStyle(
                     fontFamily: 'Cairo',
                     fontWeight: FontWeight.bold,
-                    color: widget.isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark,
+                    color: widget.isDarkMode
+                        ? AppColors.darkTextLight
+                        : AppColors.lightTextDark,
                   ),
                 ),
                 trailing: Text(
-                  "${isArabic ? 'عدد المرات:' : 'Count:'} ${order["count"]}",
-                  style: TextStyle(
+                  "${isArabic ? 'عدد المرات:' : 'Count:'} ${order["count"] ?? 0}",
+                  style: const TextStyle(
                     fontFamily: 'Cairo',
                     color: AppColors.accentBlue,
                     fontWeight: FontWeight.bold,
@@ -139,9 +187,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isArabic = widget.currentLocale == 'ar';
-    final backgroundColor = widget.isDarkMode ? AppColors.darkBackground : AppColors.lightBackground;
-    final cardColor = widget.isDarkMode ? AppColors.darkBackgroundSecondary : AppColors.lightBackgroundSecondary;
-    final textColor = widget.isDarkMode ? AppColors.darkTextLight : AppColors.lightTextDark;
+    final backgroundColor = widget.isDarkMode
+        ? AppColors.darkBackground
+        : AppColors.lightBackground;
+    final cardColor = widget.isDarkMode
+        ? AppColors.darkBackgroundSecondary
+        : AppColors.lightBackgroundSecondary;
+    final textColor = widget.isDarkMode
+        ? AppColors.darkTextLight
+        : AppColors.lightTextDark;
 
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -190,7 +244,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.15),
+                        color: Colors.white.withAlpha(38), // البديل الآمن الحديث لـ withOpacity
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -200,9 +254,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 12),
-                    const Text(
-                      "Nadeen Abu Hilweh",
-                      style: TextStyle(
+                    _isLoadingUser
+                        ? const SizedBox(
+                      height: 20,
+                      width: 20,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2),
+                    )
+                        : Text(
+                      userName.isNotEmpty ? userName : (isArabic ? "مستخدم" : "User"),
+                      style: const TextStyle(
                         color: Colors.white,
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -210,23 +270,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
-                      "+970 59 123 4567",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 13,
-                        fontFamily: 'Cairo',
+                    if (!_isLoadingUser)
+                      Text(
+                        userEmail,
+                        style: const TextStyle(
+                          color: Colors.white70,
+                          fontSize: 12,
+                          fontFamily: 'Cairo',
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      "nadeenabuhi@email.com",
-                      style: TextStyle(
-                        color: Colors.white70,
-                        fontSize: 12,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
                     const SizedBox(height: 20),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -252,7 +304,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildProfileOption(
                       icon: Icons.location_on_outlined,
                       iconColor: Colors.purple,
-                      iconBg: Colors.purple.withOpacity(0.1),
+                      iconBg: Colors.purple.withAlpha(25),
                       title: isArabic ? "عناوينّي" : "My Addresses",
                       cardColor: cardColor,
                       textColor: textColor,
@@ -262,7 +314,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildProfileOption(
                       icon: Icons.inventory_2_outlined,
                       iconColor: Colors.amber,
-                      iconBg: Colors.amber.withOpacity(0.1),
+                      iconBg: Colors.amber.withAlpha(25),
                       title: isArabic ? "سجل طلباتي" : "Order History",
                       cardColor: cardColor,
                       textColor: textColor,
@@ -273,15 +325,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _buildProfileOption(
                       icon: Icons.logout_rounded,
                       iconColor: Colors.redAccent,
-                      iconBg: Colors.redAccent.withOpacity(0.1),
+                      iconBg: Colors.redAccent.withAlpha(25),
                       title: isArabic ? "تسجيل الخروج" : "Log Out",
                       cardColor: cardColor,
                       textColor: Colors.redAccent,
                       isLogout: true,
                       isArabic: isArabic,
-                      onTap: () {
+                      onTap: () async {
+                        await AuthService.logout();
                         widget.onLogout();
-                        Navigator.pop(context);
+                        if (mounted) Navigator.pop(context);
                       },
                     ),
                   ],
@@ -361,7 +414,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           isArabic
               ? Icons.chevron_left_rounded
               : Icons.chevron_right_rounded,
-          color: textColor.withOpacity(0.4),
+          color: textColor.withAlpha(100),
         ),
         onTap: onTap,
       ),

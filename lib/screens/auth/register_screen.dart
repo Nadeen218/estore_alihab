@@ -1,5 +1,4 @@
-// lib/auth/register_screen.dart
-
+import 'package:estor_alihab/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'login_screen.dart';
@@ -25,6 +24,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -217,21 +217,57 @@ class _RegisterScreenState extends State<RegisterScreen> {
                         ),
                         elevation: 0,
                       ),
-                      onPressed: () {
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
                         if (_formKey.currentState!.validate()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isArabic ? "تم إنشاء الحساب بنجاح!" : "Account created successfully!",
-                                style: const TextStyle(fontFamily: 'Cairo'),
-                              ),
-                              backgroundColor: AppColors.accentGreen,
-                            ),
+                          setState(() {
+                            _isLoading = true;
+                          });
+
+                          final result = await AuthService.register(
+                            name: _nameController.text.trim(),
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text,
                           );
-                          Navigator.pop(context, true);
+
+                          setState(() {
+                            _isLoading = false;
+                          });
+
+                          if (!mounted) return;
+
+                          if (result['success'] == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isArabic ? "تم إنشاء الحساب بنجاح!" : "Account created successfully!",
+                                  style: const TextStyle(fontFamily: 'Cairo'),
+                                ),
+                                backgroundColor: AppColors.accentGreen,
+                              ),
+                            );
+                            Navigator.pop(context, true);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result['message'] ?? (isArabic ? "صار خطأ" : "Something went wrong"),
+                                  style: const TextStyle(fontFamily: 'Cairo'),
+                                ),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                          }
                         }
                       },
-                      child: Text(
+                      child: _isLoading
+                          ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                      )
+                          : Text(
                         isArabic ? "إنشاء الحساب" : "Sign Up",
                         style: const TextStyle(
                           color: Colors.white,

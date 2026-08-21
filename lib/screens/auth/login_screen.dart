@@ -1,5 +1,4 @@
-// lib/auth/login_screen.dart
-
+import 'package:estor_alihab/services/auth_service.dart';
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'register_screen.dart';
@@ -23,6 +22,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _isPasswordVisible = false;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -239,21 +239,56 @@ class _LoginScreenState extends State<LoginScreen> {
                         ),
                         elevation: 0,
                       ),
-                      onPressed: () {
+                      onPressed: _isLoading
+                          ? null
+                          : () async {
                         if (_formKey.currentState!.validate()) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isArabic ? "تم تسجيل الدخول بنجاح!" : "Logged in successfully!",
-                                style: const TextStyle(fontFamily: 'Cairo'),
-                              ),
-                              backgroundColor: AppColors.accentGreen,
-                            ),
+                          setState(() {
+                            _isLoading = true;
+                          });
+
+                          final result = await AuthService.login(
+                            email: _emailController.text.trim(),
+                            password: _passwordController.text,
                           );
-                          Navigator.pop(context, true);
+
+                          setState(() {
+                            _isLoading = false;
+                          });
+
+                          if (!mounted) return;
+
+                          if (result['success'] == true) {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  isArabic ? "تم تسجيل الدخول بنجاح!" : "Logged in successfully!",
+                                  style: const TextStyle(fontFamily: 'Cairo'),
+                                ),
+                                backgroundColor: AppColors.accentGreen,
+                              ),
+                            );
+                            Navigator.pop(context, true);
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(
+                                content: Text(
+                                  result['message'] ?? (isArabic ? "صار خطأ" : "Something went wrong"),
+                                  style: const TextStyle(fontFamily: 'Cairo'),
+                                ),
+                                backgroundColor: Colors.redAccent,
+                              ),
+                            );
+                          }
                         }
                       },
-                      child: Text(
+                      child: _isLoading
+                          ? const SizedBox(
+                        width: 22,
+                        height: 22,
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                      )
+                          : Text(
                         isArabic ? "تسجيل الدخول" : "Login",
                         style: const TextStyle(
                           color: Colors.white,
