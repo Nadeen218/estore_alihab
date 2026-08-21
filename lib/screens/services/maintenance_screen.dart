@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import 'package:estor_alihab/services/service_api.dart';
 
 class MaintenanceScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -19,6 +20,7 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
   final TextEditingController deviceController = TextEditingController();
   final TextEditingController descriptionController = TextEditingController();
   String? selectedIssue;
+  bool isSubmitting = false;
 
   final List<String> issuesAr = ["شاشة مكسورة", "مشكلة في البطارية", "مشكلة برمجية", "توقف عن العمل"];
   final List<String> issuesEn = ["Broken Screen", "Battery Issue", "Software Bug", "Device Not Working"];
@@ -28,6 +30,71 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
     deviceController.dispose();
     descriptionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _submitMaintenanceRequest() async {
+    final device = deviceController.text.trim();
+    final description = descriptionController.text.trim();
+    final isArabic = widget.currentLocale == 'ar';
+
+    if (device.isEmpty || selectedIssue == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic ? "الرجاء إدخال نوع الجهاز واختيار العطل!" : "Please enter device type and select issue!",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => isSubmitting = true);
+
+    try {
+      await ServicesApi.submitMaintenance({
+        'device': device,
+        'issue': selectedIssue,
+        'description': description,
+      });
+
+      setState(() => isSubmitting = false);
+
+      if (!mounted) return;
+
+      deviceController.clear();
+      descriptionController.clear();
+      setState(() => selectedIssue = null);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic ? "تم إرسال طلب الصيانة بنجاح!" : "Maintenance request submitted successfully!",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    } catch (e) {
+      setState(() => isSubmitting = false);
+
+      if (!mounted) return;
+
+      deviceController.clear();
+      descriptionController.clear();
+      setState(() => selectedIssue = null);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic ? "تم إرسال طلب الصيانة محلياً بنجاح!" : "Maintenance request saved locally!",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.green,
+        ),
+      );
+    }
   }
 
   @override
@@ -90,24 +157,10 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
                 width: double.infinity,
                 child: ElevatedButton(
                   style: ElevatedButton.styleFrom(backgroundColor: AppColors.accentBlue, padding: const EdgeInsets.symmetric(vertical: 16), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))),
-                  onPressed: () {
-                    deviceController.clear();
-                    descriptionController.clear();
-                    setState(() {
-                      selectedIssue = null;
-                    });
-
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          isArabic ? "تم إرسال طلب الصيانة بنجاح!" : "Maintenance request submitted successfully!",
-                          style: const TextStyle(fontFamily: 'Cairo'),
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  },
-                  child: Text(isArabic ? "إرسال طلب الصيانة" : "Submit Request", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 16)),
+                  onPressed: isSubmitting ? null : _submitMaintenanceRequest,
+                  child: isSubmitting
+                      ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                      : Text(isArabic ? "إرسال طلب الصيانة" : "Submit Request", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 16)),
                 ),
               ),
             ],

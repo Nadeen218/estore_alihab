@@ -35,4 +35,13 @@ class ServicesApi {
     );
     return response.statusCode == 201;
   }
+
+  static Future<bool> submitMaintenance(Map<String, dynamic> requestData) async {
+    final response = await http.post(
+      Uri.parse('$baseUrl/maintenance'),
+      headers: {'Content-Type': 'application/json'},
+      body: json.encode(requestData),
+    );
+    return response.statusCode == 200 || response.statusCode == 201;
+  }
 }
