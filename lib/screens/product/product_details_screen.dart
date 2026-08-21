@@ -133,7 +133,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                           child: image.isNotEmpty
                               ? Image.network(
                             image,
-                            height: 180,
+                            height: 380,
                             fit: BoxFit.contain,
                             errorBuilder: (context, error, stackTrace) =>
                             const Icon(Icons.broken_image, size: 80, color: Colors.grey),
