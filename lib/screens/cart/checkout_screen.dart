@@ -47,7 +47,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     super.dispose();
   }
 
-  void _processOrder(bool isArabic) {
+  Future<void> _processOrder(bool isArabic) async {
     final name = nameController.text.trim();
     final phone = phoneController.text.trim();
     final city = cityController.text.trim();
@@ -70,8 +70,30 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
-    final generatedOrderId = _generateOrderId();
-    _showSuccessDialog(isArabic, generatedOrderId, phone);
+    final shippingDetails = {
+      'fullName': name,
+      'phone': phone,
+      'city': city,
+      'address': address,
+      'paymentMethod': selectedPaymentIndex == 0 ? 'Cash on Delivery' : 'Credit Card',
+    };
+
+    bool success = await CartService.checkoutOrderApi(shippingDetails: shippingDetails);
+
+    if (success) {
+      final generatedOrderId = _generateOrderId();
+      _showSuccessDialog(isArabic, generatedOrderId, phone);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic ? "حدث خطأ أثناء إتمام الطلب، يرجى المحاولة مرة أخرى" : "Error placing order, please try again",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   void _showSuccessDialog(bool isArabic, String orderId, String phoneNumber) {
@@ -164,9 +186,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       elevation: 0,
                     ),
                     onPressed: () {
-                      CartService.checkoutOrder();
                       Navigator.pop(dialogContext);
-
                       Navigator.pushAndRemoveUntil(
                         context,
                         MaterialPageRoute(

@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 
 class CartItem {
   final String id;
@@ -16,9 +18,20 @@ class CartItem {
     required this.image,
     this.quantity = 1,
   });
+
+  Map<String, dynamic> toJson() => {
+    'productId': id,
+    'title': title,
+    'subtitle': subtitle,
+    'price': price,
+    'image': image,
+    'quantity': quantity,
+  };
 }
 
 class CartService {
+  static const String baseUrl = 'http://localhost:5000/api';
+
   static final ValueNotifier<List<CartItem>> cartItemsNotifier =
   ValueNotifier<List<CartItem>>([]);
 
@@ -104,6 +117,36 @@ class CartService {
         currentList[index].quantity--;
         cartItemsNotifier.value = currentList;
       }
+    }
+  }
+
+  // ربط إتمام الطلب بالباك إند (إرسال الطلب لقاعدة البيانات)
+  static Future<bool> checkoutOrderApi({String? token, Map<String, dynamic>? shippingDetails}) async {
+    if (cartItemsNotifier.value.isEmpty) return false;
+
+    try {
+      final response = await http.post(
+        Uri.parse('$baseUrl/orders'),
+        headers: {
+          'Content-Type': 'application/json',
+          if (token != null) 'Authorization': 'Bearer $token',
+        },
+        body: json.encode({
+          'items': cartItemsNotifier.value.map((item) => item.toJson()).toList(),
+          'subtotal': subtotal,
+          'tax': tax,
+          'total': total,
+          'shippingDetails': shippingDetails ?? {},
+        }),
+      );
+
+      if (response.statusCode == 201 || response.statusCode == 200) {
+        checkoutOrder();
+        return true;
+      }
+      return false;
+    } catch (e) {
+      return false;
     }
   }
 
