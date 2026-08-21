@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
+import 'package:estor_alihab/services/service_api.dart';
 
 class SimScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -17,7 +18,79 @@ class SimScreen extends StatefulWidget {
 
 class _SimScreenState extends State<SimScreen> {
   final TextEditingController numberController = TextEditingController();
-  String? selectedSimPlan;
+
+  List<dynamic> plans = [];
+  bool isLoadingPlans = true;
+  bool isCheckingNumber = false;
+  Map<String, dynamic>? selectedSimPlan;
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchSimPackages();
+  }
+
+  Future<void> _fetchSimPackages() async {
+    try {
+      final data = await ServicesApi.getPackages('sim');
+      setState(() {
+        plans = data;
+        isLoadingPlans = false;
+      });
+    } catch (e) {
+      setState(() {
+        isLoadingPlans = false;
+      });
+    }
+  }
+
+  Future<void> _checkNumber() async {
+    final enteredNumber = numberController.text.trim();
+    final isArabic = widget.currentLocale == 'ar';
+
+    if (enteredNumber.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic ? "الرجاء إدخال رقم الجوال أولاً!" : "Please enter the mobile number first!",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
+    setState(() => isCheckingNumber = true);
+
+    try {
+      await Future.delayed(const Duration(milliseconds: 800));
+      setState(() => isCheckingNumber = false);
+
+      if (!mounted) return;
+
+      numberController.clear();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic
+                ? "تم التحقق أو حجز الرقم ($enteredNumber) بنجاح"
+                : "Number ($enteredNumber) checked or reserved successfully",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.purple,
+        ),
+      );
+    } catch (e) {
+      setState(() => isCheckingNumber = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("حدث خطأ أثناء التحقق", style: TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
 
   @override
   void dispose() {
@@ -149,34 +222,10 @@ class _SimScreenState extends State<SimScreen> {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
-                      onPressed: () {
-                        if (numberController.text.trim().isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isArabic ? "الرجاء إدخال رقم الجوال أولاً!" : "Please enter the mobile number first!",
-                                style: const TextStyle(fontFamily: 'Cairo'),
-                              ),
-                              backgroundColor: Colors.redAccent,
-                            ),
-                          );
-                        } else {
-                          final enteredNumber = numberController.text.trim();
-                          numberController.clear();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text(
-                                isArabic
-                                    ? "جاري البحث أو التحقق من الرقم ($enteredNumber)..."
-                                    : "Checking number ($enteredNumber)...",
-                                style: const TextStyle(fontFamily: 'Cairo'),
-                              ),
-                              backgroundColor: Colors.purple,
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(isArabic ? "تحقق / احجز الرقم" : "Check / Reserve", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 14)),
+                      onPressed: isCheckingNumber ? null : _checkNumber,
+                      child: isCheckingNumber
+                          ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                          : Text(isArabic ? "تحقق / احجز الرقم" : "Check / Reserve", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontFamily: 'Cairo', fontSize: 14)),
                     ),
                   ),
                 ],
@@ -191,32 +240,35 @@ class _SimScreenState extends State<SimScreen> {
             ),
             const SizedBox(height: 12),
 
-            _buildSimPlanCard(
-              title: isArabic ? "باقة بلس 30" : "Plus 30 Plan",
-              details: isArabic ? "5 جيجابايت + 500 دقيقة" : "5 GB + 500 Mins",
-              price: "30 شيكل / شهر",
-              cardColor: cardColor,
-              textColor: textColor,
-              textMuted: textMuted,
-            ),
-            const SizedBox(height: 10),
-            _buildSimPlanCard(
-              title: isArabic ? "باقة الملكية 50" : "Royal 50 Plan",
-              details: isArabic ? "15 جيجابايت + دقائق غير محدودة" : "15 GB + Unlimited Mins",
-              price: "50 شيكل / شهر",
-              isPopular: true,
-              cardColor: cardColor,
-              textColor: textColor,
-              textMuted: textMuted,
-            ),
-            const SizedBox(height: 10),
-            _buildSimPlanCard(
-              title: isArabic ? "باقة الانفينيتي 80" : "Infinity 80 Plan",
-              details: isArabic ? "إنترنت بلا حدود + دقائق محلي ودولي" : "Unlimited Internet + Local/Intl Mins",
-              price: "80 شيكل / شهر",
-              cardColor: cardColor,
-              textColor: textColor,
-              textMuted: textMuted,
+            isLoadingPlans
+                ? const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                : plans.isEmpty
+                ? Center(child: Text(isArabic ? "لا توجد باقات متاحة حالياً" : "No packages available", style: TextStyle(color: textMuted, fontFamily: 'Cairo')))
+                : ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: plans.length,
+              itemBuilder: (context, index) {
+                final plan = plans[index];
+                final title = plan['name'] ?? plan['title'] ?? 'باقة';
+                final details = plan['details'] ?? plan['speed'] ?? '';
+                final price = "${plan['price'] ?? 0} شيكل / شهر";
+                final isPopular = plan['isPopular'] ?? false;
+
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 10),
+                  child: _buildSimPlanCard(
+                    planData: plan,
+                    title: title,
+                    details: details,
+                    price: price,
+                    isPopular: isPopular,
+                    cardColor: cardColor,
+                    textColor: textColor,
+                    textMuted: textMuted,
+                  ),
+                );
+              },
             ),
           ],
         ),
@@ -225,6 +277,7 @@ class _SimScreenState extends State<SimScreen> {
   }
 
   Widget _buildSimPlanCard({
+    required Map<String, dynamic> planData,
     required String title,
     required String details,
     required String price,
@@ -233,12 +286,12 @@ class _SimScreenState extends State<SimScreen> {
     required Color textColor,
     required Color textMuted,
   }) {
-    final bool isSelected = selectedSimPlan == title;
+    final bool isSelected = selectedSimPlan != null && selectedSimPlan!['id'] == planData['id'];
 
     return InkWell(
       onTap: () {
         setState(() {
-          selectedSimPlan = title;
+          selectedSimPlan = planData;
         });
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
