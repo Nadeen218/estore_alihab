@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'cart_service.dart';
 import '../track/track_order_screen.dart';
+import '../../services/auth_service.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -70,6 +71,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
+    final token = await AuthService.getToken();
+    if (token == null || token.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            isArabic ? "يجب تسجيل الدخول لإتمام الطلب" : "Please log in to complete the order",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+      return;
+    }
+
     final shippingDetails = {
       'fullName': name,
       'phone': phone,
@@ -78,7 +93,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'paymentMethod': selectedPaymentIndex == 0 ? 'Cash on Delivery' : 'Credit Card',
     };
 
-    bool success = await CartService.checkoutOrderApi(shippingDetails: shippingDetails);
+    bool success = await CartService.checkoutOrderApi(
+      token: token,
+      shippingDetails: shippingDetails,
+    );
 
     if (success) {
       final generatedOrderId = _generateOrderId();

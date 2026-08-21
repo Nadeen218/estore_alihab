@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'package:estor_alihab/services/auth_service.dart';
+import '../track/order_history_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -112,78 +113,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  void _showOrderHistorySheet(bool isArabic) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: widget.isDarkMode
-          ? AppColors.darkBackgroundSecondary
-          : AppColors.lightBackgroundSecondary,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              isArabic ? "تفاصيل سجل الطلبات" : "Order History Details",
-              style: TextStyle(
-                fontFamily: 'Cairo',
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-                color: widget.isDarkMode
-                    ? AppColors.darkTextLight
-                    : AppColors.lightTextDark,
-              ),
-            ),
-            const SizedBox(height: 16),
-            widget.orderHistory.isEmpty
-                ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 20),
-              child: Center(
-                child: Text(
-                  isArabic ? "لا توجد طلبات سابقة" : "No previous orders",
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    color: widget.isDarkMode
-                        ? AppColors.darkTextMuted
-                        : AppColors.lightTextMuted,
-                  ),
-                ),
-              ),
-            )
-                : Column(
-              children: widget.orderHistory.map((order) => ListTile(
-                leading: const Icon(Icons.inventory_2_outlined, color: Colors.amber),
-                title: Text(
-                  isArabic ? (order["nameAr"] ?? '') : (order["nameEn"] ?? ''),
-                  style: TextStyle(
-                    fontFamily: 'Cairo',
-                    fontWeight: FontWeight.bold,
-                    color: widget.isDarkMode
-                        ? AppColors.darkTextLight
-                        : AppColors.lightTextDark,
-                  ),
-                ),
-                trailing: Text(
-                  "${isArabic ? 'عدد المرات:' : 'Count:'} ${order["count"] ?? 0}",
-                  style: const TextStyle(
-                    fontFamily: 'Cairo',
-                    color: AppColors.accentBlue,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              )).toList(),
-            ),
-            const SizedBox(height: 20),
-          ],
-        ),
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final isArabic = widget.currentLocale == 'ar';
@@ -244,7 +173,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white.withAlpha(38), // البديل الآمن الحديث لـ withOpacity
+                        color: Colors.white.withAlpha(38),
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
@@ -319,7 +248,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       cardColor: cardColor,
                       textColor: textColor,
                       isArabic: isArabic,
-                      onTap: () => _showOrderHistorySheet(isArabic),
+                      onTap: () async {
+                        final token = await AuthService.getToken() ?? '';
+                        if (!mounted) return;
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => OrderHistoryScreen(
+                              isDarkMode: widget.isDarkMode,
+                              currentLocale: widget.currentLocale,
+                              token: token,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                     const SizedBox(height: 10),
                     _buildProfileOption(

@@ -21,16 +21,15 @@ class CartItem {
 
   Map<String, dynamic> toJson() => {
     'productId': id,
-    'title': title,
-    'subtitle': subtitle,
+    'name': title,
     'price': price,
-    'image': image,
     'quantity': quantity,
   };
 }
 
 class CartService {
-  static const String baseUrl = 'http://10.0.2.2:5000/api';
+  static const String baseUrl = 'http://10.0.2.2:5000/api';// local for android sim محلي لمحاكي الاندرويد
+  // في حال التجربة غير العنوان عشان يشتغل لانه لوكال للاندرويد ستوديو
 
   static final ValueNotifier<List<CartItem>> cartItemsNotifier =
   ValueNotifier<List<CartItem>>([]);
@@ -120,35 +119,82 @@ class CartService {
     }
   }
 
-  static Future<bool> checkoutOrderApi({String? token, Map<String, dynamic>? shippingDetails}) async {
+  static Future<bool> checkoutOrderApi({
+    required String token,
+    required Map<String, dynamic> shippingDetails,
+  }) async {
     if (cartItemsNotifier.value.isEmpty) return false;
+    if (token.isEmpty) return false;
+
+    final itemsPayload = cartItemsNotifier.value.map((item) => item.toJson()).toList();
+    final shippingAddress =
+        "${shippingDetails['city'] ?? ''} - ${shippingDetails['address'] ?? ''}";
 
     try {
       final response = await http.post(
         Uri.parse('$baseUrl/orders'),
         headers: {
           'Content-Type': 'application/json',
-          if (token != null) 'Authorization': 'Bearer $token',
+          'Authorization': 'Bearer $token',
         },
         body: json.encode({
-          'items': cartItemsNotifier.value.map((item) => item.toJson()).toList(),
-          'subtotal': subtotal,
-          'tax': tax,
-          'total': total,
-          'shippingDetails': shippingDetails ?? {},
+          'items': itemsPayload,
+          'shippingAddress': shippingAddress,
+          'phone': shippingDetails['phone'] ?? '',
+          'notes': shippingDetails['paymentMethod'] ?? '',
         }),
       );
 
-      if (response.statusCode == 201 || response.statusCode == 200) {
+      if (response.statusCode == 201) {
         checkoutOrder();
         return true;
       } else {
-        checkoutOrder();
-        return true;
+        print('Order failed: ${response.statusCode} ${response.body}');
+        return false;
       }
     } catch (e) {
-      checkoutOrder();
-      return true;
+      print('Order error: $e');
+      return false;
+    }
+  }
+
+  static Future<void> fetchUserOrders(String? token) async {
+    if (token == null || token.isEmpty) return;
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/orders'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        List<dynamic> fetchedOrders = data is List ? data : (data['orders'] ?? []);
+
+        List<Map<String, dynamic>> formattedHistory = [];
+        int totalCount = 0;
+
+        for (var order in fetchedOrders) {
+          var items = order['items'] ?? [];
+          for (var item in items) {
+            formattedHistory.add({
+              "nameAr": item['title'] ?? "طلب",
+              "nameEn": item['title'] ?? "Order",
+              "count": item['quantity'] ?? 1,
+              "date": order['createdAt'] ?? "",
+              "total": order['total'] ?? 0.0,
+            });
+            totalCount += (item['quantity'] as num?)?.toInt() ?? 1;
+          }
+        }
+
+        orderHistoryNotifier.value = formattedHistory;
+        ordersCountNotifier.value = totalCount;
+      }
+    } catch (e) {
+      // تفادي التوقف في حال فشل الاتصال المؤقت
     }
   }
 
@@ -167,12 +213,14 @@ class CartService {
           "nameAr": cartItem.title,
           "nameEn": cartItem.title,
           "count": cartItem.quantity,
+          "date": DateTime.now().toString(),
+          "total": total,
         });
       }
     }
 
     orderHistoryNotifier.value = currentHistory;
-    ordersCountNotifier.value += 1;
+    ordersCountNotifier.value += cartItemsNotifier.value.fold(0, (sum, item) => sum + item.quantity);
     clearCart();
   }
 
