@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import '../../api_config.dart';
 
 class CartItem {
   final String id;
@@ -28,8 +29,7 @@ class CartItem {
 }
 
 class CartService {
-  static const String baseUrl = 'http://10.0.2.2:5000/api';// local for android sim محلي لمحاكي الاندرويد
-  // في حال التجربة غير العنوان عشان يشتغل لانه لوكال للاندرويد ستوديو
+  static String get baseUrl => ApiConfig.baseUrl;
 
   static final ValueNotifier<List<CartItem>> cartItemsNotifier =
   ValueNotifier<List<CartItem>>([]);
@@ -119,12 +119,12 @@ class CartService {
     }
   }
 
-  static Future<bool> checkoutOrderApi({
+  static Future<String?> checkoutOrderApi({
     required String token,
     required Map<String, dynamic> shippingDetails,
   }) async {
-    if (cartItemsNotifier.value.isEmpty) return false;
-    if (token.isEmpty) return false;
+    if (cartItemsNotifier.value.isEmpty) return null;
+    if (token.isEmpty) return null;
 
     final itemsPayload = cartItemsNotifier.value.map((item) => item.toJson()).toList();
     final shippingAddress =
@@ -146,15 +146,17 @@ class CartService {
       );
 
       if (response.statusCode == 201) {
+        final data = json.decode(response.body);
+        final orderNumber = data['order']?['orderNumber'] as String?;
         checkoutOrder();
-        return true;
+        return orderNumber;
       } else {
         print('Order failed: ${response.statusCode} ${response.body}');
-        return false;
+        return null;
       }
     } catch (e) {
       print('Order error: $e');
-      return false;
+      return null;
     }
   }
 
@@ -162,7 +164,7 @@ class CartService {
     if (token == null || token.isEmpty) return;
     try {
       final response = await http.get(
-        Uri.parse('$baseUrl/orders'),
+        Uri.parse('$baseUrl/orders/my-orders'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Bearer $token',
@@ -180,11 +182,11 @@ class CartService {
           var items = order['items'] ?? [];
           for (var item in items) {
             formattedHistory.add({
-              "nameAr": item['title'] ?? "طلب",
-              "nameEn": item['title'] ?? "Order",
+              "nameAr": item['name'] ?? item['title'] ?? "طلب",
+              "nameEn": item['name'] ?? item['title'] ?? "Order",
               "count": item['quantity'] ?? 1,
               "date": order['createdAt'] ?? "",
-              "total": order['total'] ?? 0.0,
+              "total": order['totalAmount'] ?? order['total'] ?? 0.0,
             });
             totalCount += (item['quantity'] as num?)?.toInt() ?? 1;
           }

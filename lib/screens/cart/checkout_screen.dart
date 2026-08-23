@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'cart_service.dart';
@@ -32,12 +31,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController addressController = TextEditingController();
 
   double get totalPrice => widget.subtotal + widget.deliveryFee;
-
-  String _generateOrderId() {
-    final random = Random();
-    final randomNumber = 10000 + random.nextInt(90000);
-    return "ES-$randomNumber";
-  }
 
   @override
   void dispose() {
@@ -93,14 +86,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'paymentMethod': selectedPaymentIndex == 0 ? 'Cash on Delivery' : 'Credit Card',
     };
 
-    bool success = await CartService.checkoutOrderApi(
+    final orderNumber = await CartService.checkoutOrderApi(
       token: token,
       shippingDetails: shippingDetails,
     );
 
-    if (success) {
-      final generatedOrderId = _generateOrderId();
-      _showSuccessDialog(isArabic, generatedOrderId, phone);
+    if (orderNumber != null) {
+      _showSuccessDialog(isArabic, orderNumber, phone);
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

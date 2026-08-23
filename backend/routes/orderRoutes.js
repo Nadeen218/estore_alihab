@@ -1,12 +1,14 @@
 const express = require('express');
+const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const { db } = require('../config/database');
 const authMiddleware = require('../middleware/authMiddleware');
 
-const router = express.Router();
+function generateOrderNumber() {
+  const randomNumber = 10000 + Math.floor(Math.random() * 90000);
+  return `ES-${randomNumber}`;
+}
 
-// POST /api/orders
-// إنشاء طلب جديد (Checkout) - محمي
 router.post(
   '/',
   authMiddleware,
@@ -35,6 +37,7 @@ router.post(
 
       const newOrder = {
         userId: req.userId,
+        orderNumber: generateOrderNumber(),
         items,
         totalAmount,
         shippingAddress,
@@ -57,9 +60,6 @@ router.post(
   }
 );
 
-
-// GET /api/orders/my-orders
-// عرض طلبات المستخدم الحالي - محمي
 router.get('/my-orders', authMiddleware, async (req, res) => {
   try {
     const snapshot = await db
@@ -76,8 +76,37 @@ router.get('/my-orders', authMiddleware, async (req, res) => {
   }
 });
 
-// GET /api/orders/:id
-// تفاصيل طلب واحد - محمي
+router.get('/track', async (req, res) => {
+  try {
+    const { orderId, phone } = req.query;
+
+    if (!orderId || !phone) {
+      return res.status(400).json({ message: 'رقم الطلب ورقم الهاتف مطلوبين' });
+    }
+
+    const snapshot = await db
+      .collection('orders')
+      .where('orderNumber', '==', orderId.trim())
+      .get();
+
+    if (snapshot.empty) {
+      return res.status(404).json({ message: 'لم يتم العثور على الطلب' });
+    }
+
+    const doc = snapshot.docs[0];
+    const orderData = doc.data();
+
+    if (orderData.phone !== phone.trim()) {
+      return res.status(404).json({ message: 'لم يتم العثور على الطلب' });
+    }
+
+    res.status(200).json({ id: doc.id, ...orderData });
+  } catch (error) {
+    console.error('Track order error:', error);
+    res.status(500).json({ message: 'صار خطأ أثناء البحث عن الطلب' });
+  }
+});
+
 router.get('/:id', authMiddleware, async (req, res) => {
   try {
     const doc = await db.collection('orders').doc(req.params.id).get();
@@ -99,9 +128,6 @@ router.get('/:id', authMiddleware, async (req, res) => {
   }
 });
 
-
-// GET /api/orders
-// عرض كل الطلبات (للأدمن) - محمي
 router.get('/', authMiddleware, async (req, res) => {
   try {
     const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').get();
@@ -112,10 +138,6 @@ router.get('/', authMiddleware, async (req, res) => {
     res.status(500).json({ message: 'صار خطأ بجلب الطلبات' });
   }
 });
-
-
-// PUT /api/orders/:id/status
-// تحديث حالة الطلب - محمي (أدمن)
 
 router.put(
   '/:id/status',

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:estor_alihab/app_colors.dart';
 import '../home/home_screen.dart';
+import '../../api_config.dart';
 
 class TrackOrderScreen extends StatefulWidget {
   final bool isDarkMode;
@@ -101,11 +102,12 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
       _hasSearched = true;
       _isLoading = true;
       _errorMessage = null;
+      _orderDetails = null;
     });
 
     try {
       final response = await http.get(
-        Uri.parse('http://10.0.2.2:5000/api/orders/track?orderId=$orderId&phone=$phone'),
+        Uri.parse('${ApiConfig.baseUrl}/orders/track?orderId=$orderId&phone=$phone'),
       );
 
       if (response.statusCode == 200) {
@@ -115,16 +117,88 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
         });
       } else {
         setState(() {
-          _orderDetails = {'status': isArabic ? "في الطريق" : "On the way"};
+          _orderDetails = null;
+          _errorMessage = isArabic
+              ? "لم يتم العثور على طلب بهذه البيانات"
+              : "No order found with this information";
           _isLoading = false;
         });
       }
     } catch (e) {
       setState(() {
-        _orderDetails = {'status': isArabic ? "في الطريق" : "On the way"};
+        _orderDetails = null;
+        _errorMessage = isArabic ? "تعذر الاتصال بالسيرفر" : "Could not connect to server";
         _isLoading = false;
       });
     }
+  }
+
+  List<StepStatus> _getStepStatuses(String status) {
+    switch (status) {
+      case 'pending':
+        return [StepStatus.completed, StepStatus.active, StepStatus.pending, StepStatus.pending];
+      case 'processing':
+        return [StepStatus.completed, StepStatus.completed, StepStatus.active, StepStatus.pending];
+      case 'shipped':
+        return [StepStatus.completed, StepStatus.completed, StepStatus.completed, StepStatus.active];
+      case 'delivered':
+        return [StepStatus.completed, StepStatus.completed, StepStatus.completed, StepStatus.completed];
+      default:
+        return [StepStatus.completed, StepStatus.pending, StepStatus.pending, StepStatus.pending];
+    }
+  }
+
+  String _statusLabel(String status, bool isArabic) {
+    switch (status) {
+      case 'pending':
+        return isArabic ? "قيد الانتظار" : "Pending";
+      case 'processing':
+        return isArabic ? "قيد التجهيز" : "Processing";
+      case 'shipped':
+        return isArabic ? "في الطريق" : "On the way";
+      case 'delivered':
+        return isArabic ? "تم التسليم" : "Delivered";
+      case 'cancelled':
+        return isArabic ? "ملغي" : "Cancelled";
+      default:
+        return status;
+    }
+  }
+
+  List<Widget> _buildTrackSteps(bool isArabic, Color textColor, Color mutedTextColor) {
+    final orderStatus = (_orderDetails?['status'] ?? 'pending').toString();
+    final statuses = _getStepStatuses(orderStatus);
+
+    final steps = [
+      {
+        'title': isArabic ? "تم استلام الطلب" : "Order Received",
+        'subtitle': isArabic ? "تم استلام طلبك بنجاح" : "Your order has been received",
+      },
+      {
+        'title': isArabic ? "قيد التجهيز" : "Processing",
+        'subtitle': isArabic ? "يتم تجهيز طلبك الآن" : "Your order is being prepared",
+      },
+      {
+        'title': isArabic ? "مع المندوب" : "With Courier",
+        'subtitle': isArabic ? "المندوب في الطريق إليك" : "Courier is on the way to you",
+      },
+      {
+        'title': isArabic ? "تم التسليم" : "Delivered",
+        'subtitle': isArabic ? "تم تسليم طلبك بنجاح" : "Your order has been delivered",
+      },
+    ];
+
+    return List.generate(steps.length, (index) {
+      return _buildTrackStep(
+        title: steps[index]['title']!,
+        subtitle: steps[index]['subtitle']!,
+        status: statuses[index],
+        isLast: index == steps.length - 1,
+        textColor: textColor,
+        mutedTextColor: mutedTextColor,
+        isArabic: isArabic,
+      );
+    });
   }
 
   @override
@@ -229,7 +303,6 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                         ),
                       ),
                       const SizedBox(height: 14),
-
                       _buildInputField(
                         controller: _orderIdController,
                         hint: isArabic ? "رقم الطلب" : "Order ID",
@@ -295,6 +368,17 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                         child: CircularProgressIndicator(),
                       ),
                     )
+                        : _errorMessage != null
+                        ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          _errorMessage!,
+                          style: TextStyle(color: mutedTextColor, fontFamily: 'Cairo', fontSize: 13),
+                          textAlign: TextAlign.center,
+                        ),
+                      ),
+                    )
                         : Column(
                       children: [
                         Row(
@@ -333,7 +417,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
                                   const Icon(Icons.local_shipping, size: 12, color: Color(0xFF15803D)),
                                   const SizedBox(width: 4),
                                   Text(
-                                    _orderDetails?['status'] ?? (isArabic ? "في الطريق" : "On the way"),
+                                    _statusLabel((_orderDetails?['status'] ?? 'pending').toString(), isArabic),
                                     style: const TextStyle(
                                       color: Color(0xFF15803D),
                                       fontWeight: FontWeight.bold,
@@ -349,41 +433,7 @@ class _TrackOrderScreenState extends State<TrackOrderScreen> {
 
                         const SizedBox(height: 20),
 
-                        _buildTrackStep(
-                          title: isArabic ? "تم استلام الطلب" : "Order Received",
-                          subtitle: isArabic
-                              ? "الطلب رقم #${_orderIdController.text.trim()} تم استلامه"
-                              : "Order #${_orderIdController.text.trim()} received",
-                          status: StepStatus.completed,
-                          textColor: textColor,
-                          mutedTextColor: mutedTextColor,
-                          isArabic: isArabic,
-                        ),
-                        _buildTrackStep(
-                          title: isArabic ? "قيد التجهيز" : "Processing",
-                          subtitle: isArabic ? "يتم تجهيز طلبك الآن في المستودع" : "Being prepared in warehouse",
-                          status: StepStatus.completed,
-                          textColor: textColor,
-                          mutedTextColor: mutedTextColor,
-                          isArabic: isArabic,
-                        ),
-                        _buildTrackStep(
-                          title: isArabic ? "مع المندوب" : "With Courier",
-                          subtitle: isArabic ? "المندوب في الطريق إليك" : "Courier is on the way to you",
-                          status: StepStatus.active,
-                          textColor: textColor,
-                          mutedTextColor: mutedTextColor,
-                          isArabic: isArabic,
-                        ),
-                        _buildTrackStep(
-                          title: isArabic ? "تم التسليم" : "Delivered",
-                          subtitle: isArabic ? "في انتظار التسليم النهائي" : "Awaiting final delivery",
-                          status: StepStatus.pending,
-                          isLast: true,
-                          textColor: textColor,
-                          mutedTextColor: mutedTextColor,
-                          isArabic: isArabic,
-                        ),
+                        ..._buildTrackSteps(isArabic, textColor, mutedTextColor),
                       ],
                     ),
                   ),
