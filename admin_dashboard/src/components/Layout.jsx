@@ -6,7 +6,9 @@ const navItems = [
   { to: '/', label: 'الرئيسية', end: true },
   { to: '/products', label: 'المنتجات' },
   { to: '/orders', label: 'الطلبات' },
-  // بيصير في مكان هون: الخدمات، المستخدمين... بالمراحل الجاية
+  { to: '/services/packages', label: 'باقات الخدمة' },
+  { to: '/services/requests', label: 'طلبات الخدمة' },
+  // بيصير في مكان هون: المستخدمين... بالمراحل الجاية
 ];
 
 function SignalBars() {
