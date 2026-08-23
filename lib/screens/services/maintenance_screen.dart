@@ -52,17 +52,17 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
 
     setState(() => isSubmitting = true);
 
-    try {
-      await ServicesApi.submitMaintenance({
-        'device': device,
-        'issue': selectedIssue,
-        'description': description,
-      });
+    final success = await ServicesApi.submitMaintenance({
+      'device': device,
+      'issue': selectedIssue,
+      'description': description,
+    });
 
-      setState(() => isSubmitting = false);
+    setState(() => isSubmitting = false);
 
-      if (!mounted) return;
+    if (!mounted) return;
 
+    if (success) {
       deviceController.clear();
       descriptionController.clear();
       setState(() => selectedIssue = null);
@@ -76,22 +76,16 @@ class _MaintenanceScreenState extends State<MaintenanceScreen> {
           backgroundColor: Colors.green,
         ),
       );
-    } catch (e) {
-      setState(() => isSubmitting = false);
-
-      if (!mounted) return;
-
-      deviceController.clear();
-      descriptionController.clear();
-      setState(() => selectedIssue = null);
-
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isArabic ? "تم إرسال طلب الصيانة محلياً بنجاح!" : "Maintenance request saved locally!",
+            isArabic
+                ? "فشل إرسال الطلب. تأكد أنك سجّلت الدخول وحاول مرة أخرى"
+                : "Failed to submit request. Make sure you're logged in and try again",
             style: const TextStyle(fontFamily: 'Cairo'),
           ),
-          backgroundColor: Colors.green,
+          backgroundColor: Colors.redAccent,
         ),
       );
     }

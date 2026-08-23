@@ -29,6 +29,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController phoneController = TextEditingController();
   final TextEditingController cityController = TextEditingController();
   final TextEditingController addressController = TextEditingController();
+  final TextEditingController cardNumberController = TextEditingController();
+  final TextEditingController cardHolderController = TextEditingController();
+  final TextEditingController expiryController = TextEditingController();
+  final TextEditingController cvvController = TextEditingController();
 
   double get totalPrice => widget.subtotal + widget.deliveryFee;
 
@@ -38,6 +42,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     phoneController.dispose();
     cityController.dispose();
     addressController.dispose();
+    cardNumberController.dispose();
+    cardHolderController.dispose();
+    expiryController.dispose();
+    cvvController.dispose();
     super.dispose();
   }
 
@@ -64,6 +72,37 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       return;
     }
 
+    String? cardLastFourDigits;
+
+    if (selectedPaymentIndex == 1) {
+      final cardNumber = cardNumberController.text.replaceAll(' ', '');
+      final cardHolder = cardHolderController.text.trim();
+      final expiry = expiryController.text.trim();
+      final cvv = cvvController.text.trim();
+
+      if (cardNumber.length != 16 ||
+          cardHolder.isEmpty ||
+          !RegExp(r'^\d{2}/\d{2}$').hasMatch(expiry) ||
+          cvv.length != 3) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isArabic
+                  ? "يرجى إدخال بيانات بطاقة صحيحة (16 رقم، تاريخ MM/YY، CVV من 3 أرقام)"
+                  : "Please enter valid card details (16 digits, MM/YY, 3-digit CVV)",
+              style: const TextStyle(fontFamily: 'Cairo'),
+            ),
+            backgroundColor: Colors.redAccent,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+          ),
+        );
+        return;
+      }
+
+      cardLastFourDigits = cardNumber.substring(cardNumber.length - 4);
+    }
+
     final token = await AuthService.getToken();
     if (token == null || token.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -84,6 +123,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       'city': city,
       'address': address,
       'paymentMethod': selectedPaymentIndex == 0 ? 'Cash on Delivery' : 'Credit Card',
+      if (cardLastFourDigits != null) 'cardLastFour': cardLastFourDigits,
     };
 
     final orderNumber = await CartService.checkoutOrderApi(
@@ -376,6 +416,62 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       textColor: textColor,
                       textMutedColor: textMutedColor,
                     ),
+                    if (selectedPaymentIndex == 1) ...[
+                      const SizedBox(height: 12),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: cardColor,
+                          borderRadius: BorderRadius.circular(20),
+                        ),
+                        child: Column(
+                          children: [
+                            _buildTextField(
+                              controller: cardNumberController,
+                              hint: isArabic ? "رقم البطاقة (16 رقم)" : "Card Number (16 digits)",
+                              icon: Icons.credit_card,
+                              keyboardType: TextInputType.number,
+                              textColor: textColor,
+                              textMutedColor: textMutedColor,
+                            ),
+                            const SizedBox(height: 12),
+                            _buildTextField(
+                              controller: cardHolderController,
+                              hint: isArabic ? "الاسم على البطاقة" : "Cardholder Name",
+                              icon: Icons.person_outline_rounded,
+                              textColor: textColor,
+                              textMutedColor: textMutedColor,
+                            ),
+                            const SizedBox(height: 12),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: expiryController,
+                                    hint: "MM/YY",
+                                    icon: Icons.calendar_today_outlined,
+                                    keyboardType: TextInputType.datetime,
+                                    textColor: textColor,
+                                    textMutedColor: textMutedColor,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: _buildTextField(
+                                    controller: cvvController,
+                                    hint: "CVV",
+                                    icon: Icons.lock_outline_rounded,
+                                    keyboardType: TextInputType.number,
+                                    textColor: textColor,
+                                    textMutedColor: textMutedColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     const SizedBox(height: 24),
                     Text(
                       isArabic ? "ملخص الفاتورة" : "Order Summary",

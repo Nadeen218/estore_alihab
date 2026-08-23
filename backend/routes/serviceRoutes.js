@@ -3,10 +3,8 @@ const router = express.Router();
 const { db } = require('../config/database');
 const authMiddleware = require('../middleware/authMiddleware');
 
-// قائمة بسيطة بالمناطق المغطاة لخدمة Fiber
 const FIBER_COVERED_AREAS = ['رام الله', 'البيرة', 'نابلس', 'الخليل', 'بيت لحم'];
 
-// ==================== GET /api/services/packages?type=fiber|sim ====================
 router.get('/packages', async (req, res) => {
   try {
     const { type } = req.query;
@@ -25,8 +23,6 @@ router.get('/packages', async (req, res) => {
   }
 });
 
-// ==================== POST /api/services/check-coverage ====================
-// body: { city: "رام الله" }  -- خاص بـ Fiber فقط
 router.post('/check-coverage', (req, res) => {
   const { city } = req.body;
   if (!city || !city.trim()) {
@@ -37,8 +33,57 @@ router.post('/check-coverage', (req, res) => {
   res.json({ available, city: city.trim() });
 });
 
-// ==================== POST /api/services/request (محمي) ====================
-// body: { type: "fiber"|"sim"|"maintenance", ...تفاصيل حسب النوع }
+router.post('/check-number', async (req, res) => {
+  const { number } = req.body;
+  if (!number || !number.trim()) {
+    return res.status(400).json({ message: 'number مطلوب' });
+  }
+
+  try {
+    const snapshot = await db.collection('reservedNumbers')
+      .where('number', '==', number.trim())
+      .get();
+
+    const isReserved = !snapshot.empty;
+
+    res.json({
+      available: !isReserved,
+      number: number.trim(),
+    });
+  } catch (error) {
+    res.status(500).json({ message: 'خطأ أثناء التحقق من الرقم', error: error.message });
+  }
+});
+
+router.post('/reserve-number', authMiddleware, async (req, res) => {
+  const { number } = req.body;
+  if (!number || !number.trim()) {
+    return res.status(400).json({ message: 'number مطلوب' });
+  }
+
+  try {
+    const existing = await db.collection('reservedNumbers')
+      .where('number', '==', number.trim())
+      .get();
+
+    if (!existing.empty) {
+      return res.status(400).json({ message: 'هذا الرقم محجوز مسبقاً' });
+    }
+
+    const reservation = {
+      number: number.trim(),
+      userId: req.userId,
+      reservedAt: new Date().toISOString(),
+    };
+
+    await db.collection('reservedNumbers').add(reservation);
+
+    res.status(201).json({ message: 'تم حجز الرقم بنجاح', ...reservation });
+  } catch (error) {
+    res.status(500).json({ message: 'خطأ أثناء حجز الرقم', error: error.message });
+  }
+});
+
 router.post('/request', authMiddleware, async (req, res) => {
   try {
     const { type, ...details } = req.body;
@@ -47,10 +92,10 @@ router.post('/request', authMiddleware, async (req, res) => {
     }
 
     const newRequest = {
-      userId: req.userId,     // جاي من authMiddleware
+      userId: req.userId,
       type,
-      details,                // مرن حسب النوع (منطقة+باقة / رقم+باقة / جهاز+عطل+وصف)
-      status: 'pending',      // pending -> in_progress -> completed
+      details,
+      status: 'pending',
       createdAt: new Date().toISOString(),
     };
 
@@ -61,7 +106,6 @@ router.post('/request', authMiddleware, async (req, res) => {
   }
 });
 
-// ==================== GET /api/services/my-requests (محمي) ====================
 router.get('/my-requests', authMiddleware, async (req, res) => {
   try {
     const snapshot = await db.collection('serviceRequests')

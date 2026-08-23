@@ -64,29 +64,90 @@ class _SimScreenState extends State<SimScreen> {
     setState(() => isCheckingNumber = true);
 
     try {
-      await Future.delayed(const Duration(milliseconds: 800));
+      final result = await ServicesApi.checkNumber(enteredNumber);
+      final isAvailable = result['available'] == true;
+
       setState(() => isCheckingNumber = false);
 
       if (!mounted) return;
 
+      if (isAvailable) {
+        showDialog(
+          context: context,
+          builder: (context) => AlertDialog(
+            title: Text(isArabic ? "الرقم متاح" : "Number Available", style: const TextStyle(fontFamily: 'Cairo')),
+            content: Text(
+              isArabic
+                  ? "الرقم ($enteredNumber) متاح للحجز. هل تريد حجزه الآن؟"
+                  : "Number ($enteredNumber) is available. Reserve it now?",
+              style: const TextStyle(fontFamily: 'Cairo'),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: Text(isArabic ? "إلغاء" : "Cancel", style: const TextStyle(fontFamily: 'Cairo')),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.purple),
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await _reserveNumber(enteredNumber, isArabic);
+                },
+                child: Text(isArabic ? "احجز الآن" : "Reserve Now", style: const TextStyle(color: Colors.white, fontFamily: 'Cairo')),
+              ),
+            ],
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              isArabic ? "عذراً، هذا الرقم محجوز مسبقاً" : "Sorry, this number is already reserved",
+              style: const TextStyle(fontFamily: 'Cairo'),
+            ),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
+    } catch (e) {
+      setState(() => isCheckingNumber = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(isArabic ? "حدث خطأ أثناء التحقق" : "Error while checking", style: const TextStyle(fontFamily: 'Cairo')),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+  }
+
+  Future<void> _reserveNumber(String number, bool isArabic) async {
+    setState(() => isCheckingNumber = true);
+
+    final success = await ServicesApi.reserveNumber(number);
+
+    setState(() => isCheckingNumber = false);
+
+    if (!mounted) return;
+
+    if (success) {
       numberController.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
-            isArabic
-                ? "تم التحقق أو حجز الرقم ($enteredNumber) بنجاح"
-                : "Number ($enteredNumber) checked or reserved successfully",
+            isArabic ? "تم حجز الرقم ($number) بنجاح" : "Number ($number) reserved successfully",
             style: const TextStyle(fontFamily: 'Cairo'),
           ),
-          backgroundColor: Colors.purple,
+          backgroundColor: Colors.green,
         ),
       );
-    } catch (e) {
-      setState(() => isCheckingNumber = false);
+    } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("حدث خطأ أثناء التحقق", style: TextStyle(fontFamily: 'Cairo')),
-          backgroundColor: Colors.red,
+        SnackBar(
+          content: Text(
+            isArabic ? "فشل الحجز. تأكد أنك سجّلت الدخول" : "Reservation failed. Make sure you're logged in",
+            style: const TextStyle(fontFamily: 'Cairo'),
+          ),
+          backgroundColor: Colors.redAccent,
         ),
       );
     }
