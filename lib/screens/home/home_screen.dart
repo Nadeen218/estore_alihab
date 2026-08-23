@@ -15,6 +15,7 @@ import '../auth/profile_screen.dart';
 import '../services/services_hub_screen.dart';
 import '../services/sim_screen.dart';
 import '../services/fiber_screen.dart';
+import '../cart/cart_service.dart';
 
 class HomeScreen extends StatefulWidget {
   final bool? isDarkMode;
@@ -155,16 +156,23 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: 16),
-                HomeHeader(
-                  isDarkMode: isDarkMode,
-                  cardBg: cardColor,
-                  textMain: textColor,
-                  textSub: textMutedColor,
-                  isLoggedIn: _isLoggedIn,
-                  currentLocale: currentLocale,
-                  onLoginStatusChanged: (status) => setState(() => _isLoggedIn = status),
-                  onThemeToggle: () => setState(() => isDarkMode = !isDarkMode),
-                  onLogout: () => setState(() => _isLoggedIn = false),
+                ValueListenableBuilder<List<CartItem>>(
+                  valueListenable: CartService.cartItemsNotifier,
+                  builder: (context, cartItems, _) {
+                    final cartCount = cartItems.fold<int>(0, (sum, item) => sum + item.quantity);
+                    return HomeHeader(
+                      isDarkMode: isDarkMode,
+                      cardBg: cardColor,
+                      textMain: textColor,
+                      textSub: textMutedColor,
+                      isLoggedIn: _isLoggedIn,
+                      currentLocale: currentLocale,
+                      onLoginStatusChanged: (status) => setState(() => _isLoggedIn = status),
+                      onThemeToggle: () => setState(() => isDarkMode = !isDarkMode),
+                      onLogout: () => setState(() => _isLoggedIn = false),
+                      cartItemCount: cartCount,
+                    );
+                  },
                 ),
                 const SizedBox(height: 20),
                 SearchBarWidget(

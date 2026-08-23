@@ -15,6 +15,7 @@ class HomeHeader extends StatelessWidget {
   final ValueChanged<bool> onLoginStatusChanged;
   final String currentLocale;
   final VoidCallback onLogout;
+  final int cartItemCount;
 
   const HomeHeader({
     Key? key,
@@ -27,6 +28,7 @@ class HomeHeader extends StatelessWidget {
     required this.onLoginStatusChanged,
     required this.onLogout,
     this.currentLocale = 'ar',
+    this.cartItemCount = 0,
   }) : super(key: key);
 
   void _navigateToCart(BuildContext context) {
@@ -310,24 +312,25 @@ class HomeHeader extends StatelessWidget {
                   ),
                   child: Icon(Icons.shopping_bag_outlined, color: textMain, size: 20),
                 ),
-                Positioned(
-                  top: -1,
-                  left: -1,
-                  child: Container(
-                    padding: const EdgeInsets.all(5),
-                    decoration: const BoxDecoration(
-                      color: AppColors.accentGreen,
-                      shape: BoxShape.circle,
-                    ),
-                    constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-                    child: const Center(
-                      child: Text(
-                        "2",
-                        style: TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold, height: 1),
+                if (cartItemCount > 0)
+                  Positioned(
+                    top: -1,
+                    left: -1,
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: const BoxDecoration(
+                        color: AppColors.accentGreen,
+                        shape: BoxShape.circle,
+                      ),
+                      constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+                      child: Center(
+                        child: Text(
+                          cartItemCount > 9 ? '9+' : '$cartItemCount',
+                          style: const TextStyle(color: Colors.white, fontSize: 8.5, fontWeight: FontWeight.bold, height: 1),
+                        ),
                       ),
                     ),
                   ),
-                ),
               ],
             ),
           ),
