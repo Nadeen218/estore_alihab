@@ -26,16 +26,9 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
   late String currentLocale;
 
   int selectedStorageIndex = 0;
-  int selectedColorIndex = 0;
   int quantity = 1;
 
   final List<String> storageOptions = ["128 GB", "256 GB", "512 GB", "1 TB"];
-  final List<Color> colorOptions = [
-    const Color(0xFF333333),
-    const Color(0xFFE0E0E0),
-    const Color(0xFF4A5568),
-    const Color(0xFFD4AF37),
-  ];
 
   @override
   void initState() {
@@ -109,10 +102,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                   ),
                 );
               },
-            ),
-            IconButton(
-              icon: const Icon(Icons.favorite_border_rounded, color: Colors.redAccent),
-              onPressed: () {},
             ),
           ],
         ),
@@ -260,44 +249,6 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                                   fontFamily: 'Cairo',
                                 ),
                               ),
-                            ),
-                          ),
-                        );
-                      }),
-                    ),
-                    const SizedBox(height: 20),
-                    Text(
-                      isArabic ? "اختر اللون:" : "Select Color:",
-                      style: TextStyle(
-                        color: textColor,
-                        fontSize: 14,
-                        fontWeight: FontWeight.bold,
-                        fontFamily: 'Cairo',
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: List.generate(colorOptions.length, (index) {
-                        final isSelected = selectedColorIndex == index;
-                        return GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              selectedColorIndex = index;
-                            });
-                          },
-                          child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 6),
-                            padding: const EdgeInsets.all(3),
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              border: Border.all(
-                                color: isSelected ? AppColors.accentBlue : Colors.transparent,
-                                width: 2,
-                              ),
-                            ),
-                            child: CircleAvatar(
-                              radius: 14,
-                              backgroundColor: colorOptions[index],
                             ),
                           ),
                         );
