@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  color: #E8ECF4;
+}
+
+h1, h2, h3, .font-display {
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-thumb {
+  background: #26314C;
+  border-radius: 8px;
+}
+
+/* مؤشر الإشارة (signal bars) - العنصر المميز بالتصميم، يستخدم للحالة النشطة بالقائمة الجانبية */
+.signal-bars {
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 2px;
+  height: 12px;
+}
+.signal-bars span {
+  width: 3px;
+  background: #22D3EE;
+  border-radius: 1px;
+  opacity: 0.35;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.signal-bars span:nth-child(1) { height: 40%; }
+.signal-bars span:nth-child(2) { height: 70%; }
+.signal-bars span:nth-child(3) { height: 100%; }
+
+.nav-item.active .signal-bars span {
+  opacity: 1;
+}

@@ -2,6 +2,7 @@ const express = require('express');
 const { body, validationResult } = require('express-validator');
 const { db, bucket } = require('../config/database');
 const authMiddleware = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 const upload = require('../middleware/uploadMiddleware');
 
 const router = express.Router();
@@ -61,12 +62,13 @@ router.get('/:id', async (req, res) => {
 
 
 // POST /api/products
-// إضافة منتج جديد + صورة (محمي - لازم تسجيل دخول)
+// إضافة منتج جديد + صورة (محمي - لازم تسجيل دخول + صلاحية أدمن)
 
 router.post(
   '/',
   authMiddleware,
-  upload.single('image'), // اسم الحقل يلي رح يجي فيه الملف من تطبيق الفلاتر
+  adminMiddleware, //   بس الأدمن يقدر يضيف منتج
+  upload.single('image'), // اسم الحقل يلي رح يجي فيه الملف من تطبيق الفلاتر / الداشبورد
   [
     body('name').trim().notEmpty().withMessage('اسم المنتج مطلوب'),
     body('price').isFloat({ min: 0 }).withMessage('السعر لازم يكون رقم صحيح'),
@@ -116,8 +118,8 @@ router.post(
 
 
 // PUT /api/products/:id
-// تعديل منتج (محمي)
-router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
+// تعديل منتج (محمي - أدمن بس)
+router.put('/:id', authMiddleware, adminMiddleware, upload.single('image'), async (req, res) => {
   try {
     const productRef = db.collection('products').doc(req.params.id);
     const doc = await productRef.get();
@@ -148,8 +150,8 @@ router.put('/:id', authMiddleware, upload.single('image'), async (req, res) => {
 
 
 // DELETE /api/products/:id
-// حذف منتج (محمي)
-router.delete('/:id', authMiddleware, async (req, res) => {
+// حذف منتج (محمي - أدمن بس)
+router.delete('/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const productRef = db.collection('products').doc(req.params.id);
     const doc = await productRef.get();

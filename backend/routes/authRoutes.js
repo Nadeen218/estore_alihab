@@ -1,5 +1,3 @@
-// المسارات الخاصة بتسجيل حساب جديد وتسجيل الدخول
-
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
@@ -45,10 +43,12 @@ router.post(
       const hashedPassword = await bcrypt.hash(password, salt);
 
       // 3. نخزن المستخدم الجديد بـ Firestore
+      //  role: 'customer' افتراضياً - أي تسجيل عادي من التطبيق بيصير زبون مش أدمن
       const newUserRef = await db.collection('users').add({
         name,
         email,
         password: hashedPassword, // الباسورد المشفر بس، مش الأصلي أبداً
+        role: 'customer',
         createdAt: new Date().toISOString(),
       });
 
@@ -62,7 +62,7 @@ router.post(
       res.status(201).json({
         message: 'تم إنشاء الحساب بنجاح',
         token,
-        user: { id: newUserRef.id, name, email },
+        user: { id: newUserRef.id, name, email, role: 'customer' },
       });
     } catch (error) {
       console.error('Register error:', error);
@@ -118,7 +118,8 @@ router.post(
       res.status(200).json({
         message: 'تم تسجيل الدخول بنجاح',
         token,
-        user: { id: userDoc.id, name: userData.name, email: userData.email },
+        //  role مضافة هون كمان حتى الداشبورد يعرف فوراً بعد تسجيل الدخول
+        user: { id: userDoc.id, name: userData.name, email: userData.email, role: userData.role || 'customer' },
       });
     } catch (error) {
       console.error('Login error:', error);
@@ -128,7 +129,7 @@ router.post(
 );
 
 // GET /api/auth/me
-// جلب بيانات المستخدم الحالي (بما فيها العنوان) - محمي
+// جلب بيانات المستخدم الحالي (بما فيها العنوان والصلاحية) - محمي
 router.get('/me', authMiddleware, async (req, res) => {
   try {
     const userDoc = await db.collection('users').doc(req.userId).get();
@@ -137,7 +138,7 @@ router.get('/me', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'المستخدم غير موجود' });
     }
 
-    const { name, email, address, phone } = userDoc.data();
+    const { name, email, address, phone, role } = userDoc.data();
 
     res.status(200).json({
       user: {
@@ -146,6 +147,7 @@ router.get('/me', authMiddleware, async (req, res) => {
         email,
         address: address || '',
         phone: phone || '',
+        role: role || 'customer',
       },
     });
   } catch (error) {
