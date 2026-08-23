@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:estor_alihab/app_colors.dart';
 import 'widgets/home_header.dart';
 import 'widgets/search_bar_widget.dart';
+import 'widgets/search_results.dart';
 import 'widgets/promo_banner.dart';
 import 'widgets/categories_list.dart';
 import 'widgets/services_section.dart';
@@ -38,6 +39,7 @@ class _HomeScreenState extends State<HomeScreen> {
   late bool isDarkMode;
   late String currentLocale;
   late bool _isLoggedIn;
+  String _searchQuery = "";
 
   @override
   void initState() {
@@ -144,6 +146,7 @@ class _HomeScreenState extends State<HomeScreen> {
     final gradientStart = isDarkMode ? AppColors.darkCardGradientStart : AppColors.lightCardGradientStart;
     final gradientEnd = isDarkMode ? AppColors.darkCardGradientEnd : AppColors.lightCardGradientEnd;
     final isArabic = currentLocale == 'ar';
+    final isSearching = _searchQuery.trim().isNotEmpty;
 
     return Directionality(
       textDirection: isArabic ? TextDirection.rtl : TextDirection.ltr,
@@ -182,73 +185,86 @@ class _HomeScreenState extends State<HomeScreen> {
                   textSub: textMutedColor,
                   currentLocale: currentLocale,
                   onLanguageToggle: () => setState(() => currentLocale = currentLocale == 'ar' ? 'en' : 'ar'),
+                  onSearchChanged: (val) => setState(() => _searchQuery = val),
                 ),
                 const SizedBox(height: 24),
-                PromoBanner(
-                  startColor: gradientStart,
-                  endColor: gradientEnd,
-                  currentLocale: currentLocale,
-                  onTap: () => _navigateToCategory('الأجهزة'),
-                ),
-                const SizedBox(height: 28),
-                CategoriesList(
-                  isDarkMode: isDarkMode,
-                  cardBg: cardColor,
-                  textMain: textColor,
-                  textSub: textMutedColor,
-                  currentLocale: currentLocale,
-                  onCategorySelected: (categoryName) => _navigateToCategory(categoryName),
-                ),
-                const SizedBox(height: 28),
-                ServicesSection(
-                  isDarkMode: isDarkMode,
-                  cardBg: cardColor,
-                  textMain: textColor,
-                  textSub: textMutedColor,
-                  currentLocale: currentLocale,
-                  onSimTap: () {
-                    _checkLoginAndExecute(() {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => SimScreen(
-                            isDarkMode: isDarkMode,
-                            currentLocale: currentLocale,
+                if (isSearching)
+                  SearchResults(
+                    isDarkMode: isDarkMode,
+                    cardBg: cardColor,
+                    textMain: textColor,
+                    textSub: textMutedColor,
+                    currentLocale: currentLocale,
+                    searchQuery: _searchQuery,
+                    onCheckLogin: (action) => _checkLoginAndExecute(action),
+                  )
+                else ...[
+                  PromoBanner(
+                    startColor: gradientStart,
+                    endColor: gradientEnd,
+                    currentLocale: currentLocale,
+                    onTap: () => _navigateToCategory('الأجهزة'),
+                  ),
+                  const SizedBox(height: 28),
+                  CategoriesList(
+                    isDarkMode: isDarkMode,
+                    cardBg: cardColor,
+                    textMain: textColor,
+                    textSub: textMutedColor,
+                    currentLocale: currentLocale,
+                    onCategorySelected: (categoryName) => _navigateToCategory(categoryName),
+                  ),
+                  const SizedBox(height: 28),
+                  ServicesSection(
+                    isDarkMode: isDarkMode,
+                    cardBg: cardColor,
+                    textMain: textColor,
+                    textSub: textMutedColor,
+                    currentLocale: currentLocale,
+                    onSimTap: () {
+                      _checkLoginAndExecute(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => SimScreen(
+                              isDarkMode: isDarkMode,
+                              currentLocale: currentLocale,
+                            ),
                           ),
-                        ),
-                      );
-                    });
-                  },
-                  onFiberTap: () {
-                    _checkLoginAndExecute(() {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => FiberScreen(
-                            isDarkMode: isDarkMode,
-                            currentLocale: currentLocale,
+                        );
+                      });
+                    },
+                    onFiberTap: () {
+                      _checkLoginAndExecute(() {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => FiberScreen(
+                              isDarkMode: isDarkMode,
+                              currentLocale: currentLocale,
+                            ),
                           ),
-                        ),
-                      );
-                    });
-                  },
-                ),
-                const SizedBox(height: 20),
-                TrackOrderCard(
-                  cardBg: cardColor,
-                  textMain: textColor,
-                  textSub: textMutedColor,
-                  currentLocale: currentLocale,
-                  onTap: () => _checkLoginAndExecute(() => Navigator.push(context, MaterialPageRoute(builder: (context) => TrackOrderScreen(isDarkMode: isDarkMode, currentLocale: currentLocale, isLoggedIn: _isLoggedIn)))),
-                ),
-                const SizedBox(height: 28),
-                FeaturedProducts(
-                  isDarkMode: isDarkMode,
-                  cardBg: cardColor,
-                  textMain: textColor,
-                  currentLocale: currentLocale,
-                  onCheckLogin: (action) => _checkLoginAndExecute(action),
-                ),
+                        );
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  TrackOrderCard(
+                    cardBg: cardColor,
+                    textMain: textColor,
+                    textSub: textMutedColor,
+                    currentLocale: currentLocale,
+                    onTap: () => _checkLoginAndExecute(() => Navigator.push(context, MaterialPageRoute(builder: (context) => TrackOrderScreen(isDarkMode: isDarkMode, currentLocale: currentLocale, isLoggedIn: _isLoggedIn)))),
+                  ),
+                  const SizedBox(height: 28),
+                  FeaturedProducts(
+                    isDarkMode: isDarkMode,
+                    cardBg: cardColor,
+                    textMain: textColor,
+                    currentLocale: currentLocale,
+                    onCheckLogin: (action) => _checkLoginAndExecute(action),
+                  ),
+                ],
                 const SizedBox(height: 100),
               ],
             ),
