@@ -3,6 +3,7 @@ const router = express.Router();
 const { body, validationResult } = require('express-validator');
 const { db } = require('../config/database');
 const authMiddleware = require('../middleware/authMiddleware');
+const adminMiddleware = require('../middleware/adminMiddleware');
 
 function generateOrderNumber() {
   const randomNumber = 10000 + Math.floor(Math.random() * 90000);
@@ -107,7 +108,8 @@ router.get('/track', async (req, res) => {
   }
 });
 
-router.get('/:id', authMiddleware, async (req, res) => {
+// 👇 أضفنا adminMiddleware هون - بس الأدمن يقدر يشوف طلب معين بأي حالة
+router.get('/:id', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const doc = await db.collection('orders').doc(req.params.id).get();
 
@@ -115,20 +117,15 @@ router.get('/:id', authMiddleware, async (req, res) => {
       return res.status(404).json({ message: 'الطلب غير موجود' });
     }
 
-    const orderData = doc.data();
-
-    if (orderData.userId !== req.userId) {
-      return res.status(403).json({ message: 'ما إلك صلاحية تشوف هاد الطلب' });
-    }
-
-    res.status(200).json({ id: doc.id, ...orderData });
+    res.status(200).json({ id: doc.id, ...doc.data() });
   } catch (error) {
     console.error('Get order error:', error);
     res.status(500).json({ message: 'صار خطأ بجلب الطلب' });
   }
 });
 
-router.get('/', authMiddleware, async (req, res) => {
+// 👇 أضفنا adminMiddleware هون - بس الأدمن يقدر يشوف كل الطلبات
+router.get('/', authMiddleware, adminMiddleware, async (req, res) => {
   try {
     const snapshot = await db.collection('orders').orderBy('createdAt', 'desc').get();
     const orders = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
@@ -139,9 +136,11 @@ router.get('/', authMiddleware, async (req, res) => {
   }
 });
 
+// 👇 أضفنا adminMiddleware هون - بس الأدمن يقدر يغيّر حالة الطلب
 router.put(
   '/:id/status',
   authMiddleware,
+  adminMiddleware,
   [
     body('status')
       .isIn(['pending', 'processing', 'shipped', 'delivered', 'cancelled'])

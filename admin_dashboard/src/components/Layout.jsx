@@ -5,7 +5,8 @@ import { useAuth } from '../context/AuthContext.jsx';
 const navItems = [
   { to: '/', label: 'الرئيسية', end: true },
   { to: '/products', label: 'المنتجات' },
-  // بيصير في مكان هون: الطلبات، الخدمات، المستخدمين... بالمراحل الجاية
+  { to: '/orders', label: 'الطلبات' },
+  // بيصير في مكان هون: الخدمات، المستخدمين... بالمراحل الجاية
 ];
 
 function SignalBars() {
