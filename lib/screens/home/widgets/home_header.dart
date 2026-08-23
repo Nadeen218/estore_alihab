@@ -254,7 +254,7 @@ class HomeHeader extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "الايهاب",
+                currentLocale == 'ar' ? "الايهاب" : "Al-Ihab",
                 style: TextStyle(
                   color: isDarkMode ? AppColors.darkTextLight : AppColors.primaryBlue,
                   fontSize: 32,
@@ -265,7 +265,7 @@ class HomeHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
-                "لخدمات الاتصال",
+                currentLocale == 'ar' ? "لخدمات الاتصال" : "Telecom Services",
                 style: TextStyle(
                   color: textSub,
                   fontSize: 15.5,
@@ -274,8 +274,7 @@ class HomeHeader extends StatelessWidget {
                 ),
               ),
             ],
-          ),
-          const Spacer(),
+          ),          const Spacer(),
           GestureDetector(
             onTap: onThemeToggle,
             child: Container(
