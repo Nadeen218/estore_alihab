@@ -10,6 +10,7 @@ import OrdersPage from './pages/OrdersPage.jsx';
 import ServicePackagesPage from './pages/ServicePackagesPage.jsx';
 import ServicePackageFormPage from './pages/ServicePackageFormPage.jsx';
 import ServiceRequestsPage from './pages/ServiceRequestsPage.jsx';
+import UsersPage from './pages/UsersPage.jsx';
 
 export default function App() {
   return (
@@ -33,6 +34,7 @@ export default function App() {
         <Route path="services/packages/new" element={<ServicePackageFormPage />} />
         <Route path="services/packages/:id/edit" element={<ServicePackageFormPage />} />
         <Route path="services/requests" element={<ServiceRequestsPage />} />
+        <Route path="users" element={<UsersPage />} />
       </Route>
     </Routes>
   );

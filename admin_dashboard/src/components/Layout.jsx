@@ -8,7 +8,7 @@ const navItems = [
   { to: '/orders', label: 'الطلبات' },
   { to: '/services/packages', label: 'باقات الخدمة' },
   { to: '/services/requests', label: 'طلبات الخدمة' },
-  // بيصير في مكان هون: المستخدمين... بالمراحل الجاية
+  { to: '/users', label: 'المستخدمين' },
 ];
 
 function SignalBars() {
