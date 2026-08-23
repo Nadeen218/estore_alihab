@@ -164,6 +164,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   currentLocale: currentLocale,
                   onLoginStatusChanged: (status) => setState(() => _isLoggedIn = status),
                   onThemeToggle: () => setState(() => isDarkMode = !isDarkMode),
+                  onLogout: () => setState(() => _isLoggedIn = false),
                 ),
                 const SizedBox(height: 20),
                 SearchBarWidget(

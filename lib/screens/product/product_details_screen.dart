@@ -56,6 +56,14 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
     final String price = (widget.product["price"] ?? "0").toString();
     final String? oldPrice = widget.product["oldPrice"]?.toString();
 
+    // 👈 إذا السعر جاي من الداتا بيس وفيه رمز الشيكل أصلاً، منستخدمه متل ما هو
+    // وإذا مش موجود، منضيفه إحنا
+    String formatPrice(String rawPrice) {
+      final trimmed = rawPrice.trim();
+      if (trimmed.contains('₪')) return trimmed;
+      return "$trimmed ₪";
+    }
+
     final double rating = double.tryParse((widget.product["rating"] ?? "5.0").toString()) ?? 5.0;
     final String image = (widget.product["imageUrl"] ?? widget.product["image"] ?? "").toString();
     final String productId = (widget.product["id"] ?? widget.product["_id"] ?? 'unknown').toString();
@@ -185,7 +193,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                     Row(
                       children: [
                         Text(
-                          "$price \$",
+                          formatPrice(price),
                           style: const TextStyle(
                             color: AppColors.accentCyan,
                             fontSize: 20,
@@ -196,7 +204,7 @@ class _ProductDetailsScreenState extends State<ProductDetailsScreen> {
                         if (oldPrice != null) ...[
                           const SizedBox(width: 12),
                           Text(
-                            "$oldPrice \$",
+                            formatPrice(oldPrice),
                             style: TextStyle(
                               color: textMutedColor,
                               fontSize: 14,

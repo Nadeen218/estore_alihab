@@ -3,6 +3,7 @@ import 'package:estor_alihab/app_colors.dart';
 import '../../cart/cart_screen.dart';
 import '../../auth/login_screen.dart';
 import '../../auth/register_screen.dart';
+import '../../auth/profile_screen.dart';
 
 class HomeHeader extends StatelessWidget {
   final bool isDarkMode;
@@ -13,6 +14,7 @@ class HomeHeader extends StatelessWidget {
   final bool isLoggedIn;
   final ValueChanged<bool> onLoginStatusChanged;
   final String currentLocale;
+  final VoidCallback onLogout;
 
   const HomeHeader({
     Key? key,
@@ -23,6 +25,7 @@ class HomeHeader extends StatelessWidget {
     required this.textSub,
     required this.isLoggedIn,
     required this.onLoginStatusChanged,
+    required this.onLogout,
     this.currentLocale = 'ar',
   }) : super(key: key);
 
@@ -38,15 +41,55 @@ class HomeHeader extends StatelessWidget {
     );
   }
 
+  void _navigateToProfile(BuildContext context) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ProfileScreen(
+          isDarkMode: isDarkMode,
+          currentLocale: currentLocale,
+          onLogout: () {
+            onLoginStatusChanged(false);
+            onLogout();
+          },
+        ),
+      ),
+    );
+  }
+
   void _handleCartClick(BuildContext context) {
     if (isLoggedIn) {
       _navigateToCart(context);
     } else {
-      _showAuthRequiredDialog(context);
+      _showAuthRequiredDialog(
+        context,
+        onSuccess: (ctx) => _navigateToCart(ctx),
+        customMessage: currentLocale == 'ar'
+            ? "للوصول إلى سلة التسوق وإتمام عملية الشراء، يرجى تسجيل الدخول أو إنشاء حساب جديد."
+            : "To access the cart and complete your purchase, please log in or create a new account.",
+      );
     }
   }
 
-  void _showAuthRequiredDialog(BuildContext parentContext) {
+  void _handleProfileClick(BuildContext context) {
+    if (isLoggedIn) {
+      _navigateToProfile(context);
+    } else {
+      _showAuthRequiredDialog(
+        context,
+        onSuccess: (ctx) => _navigateToProfile(ctx),
+        customMessage: currentLocale == 'ar'
+            ? "للوصول إلى صفحة حسابك الشخصي، يرجى تسجيل الدخول أو إنشاء حساب جديد."
+            : "To access your profile, please log in or create a new account.",
+      );
+    }
+  }
+
+  void _showAuthRequiredDialog(
+      BuildContext parentContext, {
+        required void Function(BuildContext) onSuccess,
+        required String customMessage,
+      }) {
     final isArabic = currentLocale == 'ar';
 
     showDialog(
@@ -86,9 +129,7 @@ class HomeHeader extends StatelessWidget {
             ],
           ),
           content: Text(
-            isArabic
-                ? "للصول إلى سلة التسوق وإتمام عملية الشراء، يرجى تسجيل الدخول أو إنشاء حساب جديد."
-                : "To access the cart and complete your purchase, please log in or create a new account.",
+            customMessage,
             textAlign: TextAlign.center,
             style: TextStyle(
               color: isDarkMode ? AppColors.darkTextMuted : AppColors.lightTextMuted,
@@ -122,7 +163,7 @@ class HomeHeader extends StatelessWidget {
 
                       if (result == true) {
                         onLoginStatusChanged(true);
-                        _navigateToCart(parentContext);
+                        onSuccess(parentContext);
                       }
                     },
                     child: Text(
@@ -159,7 +200,7 @@ class HomeHeader extends StatelessWidget {
 
                       if (result == true) {
                         onLoginStatusChanged(true);
-                        _navigateToCart(parentContext);
+                        onSuccess(parentContext);
                       }
                     },
                     child: Text(
@@ -187,20 +228,23 @@ class HomeHeader extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: Row(
         children: [
-          Container(
-            padding: const EdgeInsets.all(2.5),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [AppColors.accentBlue, AppColors.accentCyan],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
+          GestureDetector(
+            onTap: () => _handleProfileClick(context),
+            child: Container(
+              padding: const EdgeInsets.all(2.5),
+              decoration: const BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  colors: [AppColors.accentBlue, AppColors.accentCyan],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
               ),
-            ),
-            child: CircleAvatar(
-              radius: 20,
-              backgroundColor: cardBg,
-              child: Icon(Icons.person_outline, color: textMain, size: 22),
+              child: CircleAvatar(
+                radius: 20,
+                backgroundColor: cardBg,
+                child: Icon(Icons.person_outline, color: textMain, size: 22),
+              ),
             ),
           ),
           const Spacer(),

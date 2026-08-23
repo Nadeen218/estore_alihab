@@ -97,7 +97,7 @@ class CategoriesList extends StatelessWidget {
               final String categoryName = cat["titleAr"];
 
               return Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: GestureDetector(
                   onTap: () {
                     if (onCategorySelected != null) {
