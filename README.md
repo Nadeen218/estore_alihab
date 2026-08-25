@@ -17,14 +17,14 @@ The platform consists of three integrated components working together:
 ### 📱 Mobile App
 
 <p align="center">
-  <img width="250" height="450" alt="Screenshot_20260823_200132" src="https://github.com/user-attachments/assets/7b2f037c-c9c0-4e32-84f6-ea00ba6db102" />
+  <img width="200" height="450" alt="Screenshot_20260823_200132" src="https://github.com/user-attachments/assets/7b2f037c-c9c0-4e32-84f6-ea00ba6db102" />
 
-  <img width="250" height="450" alt="Screenshot_20260823_200456" src="https://github.com/user-attachments/assets/b9f8baba-b42c-43f4-9bf2-51ab9a076913" />
+  <img width="200" height="450" alt="Screenshot_20260823_200456" src="https://github.com/user-attachments/assets/b9f8baba-b42c-43f4-9bf2-51ab9a076913" />
 
-  <img width="250" height="450" alt="Screenshot_20260823_200420" src="https://github.com/user-attachments/assets/d3cb041f-8cfc-4886-8445-1fd6274f187e" />
+  <img width="200" height="450" alt="Screenshot_20260823_200420" src="https://github.com/user-attachments/assets/d3cb041f-8cfc-4886-8445-1fd6274f187e" />
 
 
-  <img width="250" height="450" alt="Screenshot_20260823_200608" src="https://github.com/user-attachments/assets/bed0cf0f-921a-4222-9071-5c08847b7434" />
+  <img width="200" height="450" alt="Screenshot_20260823_200608" src="https://github.com/user-attachments/assets/bed0cf0f-921a-4222-9071-5c08847b7434" />
 
 </p>
 
