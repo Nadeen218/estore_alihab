@@ -37,62 +37,6 @@ The platform consists of three integrated components working together:
 
 ---
 
-## 📁 Project Structure
-
-```text
-.
-├── backend/                    # Node.js + Express REST API
-│   ├── config/
-│   │   └── database.js         # Firestore connection setup
-│   ├── middleware/
-│   │   ├── authMiddleware.js   # JWT authentication guard
-│   │   ├── adminMiddleware.js  # Admin-role authorization guard
-│   │   └── uploadMiddleware.js # File upload handling
-│   ├── routes/
-│   │   ├── authRoutes.js       # Registration, login, profile & user management
-│   │   ├── orderRoutes.js      # Order creation, tracking & status
-│   │   ├── productRoutes.js    # Product CRUD operations
-│   │   └── serviceRoutes.js    # Service packages & requests (SIM, Fiber)
-│   ├── serviceAccountKey.json  # Firebase service account (NOT committed)
-│   ├── .env                    # Environment variables (NOT committed)
-│   └── server.js               # Application entry point
-│
-├── admin_dashboard/            # React + Vite admin panel
-│   └── src/
-│       ├── api/
-│       │   └── client.js       # Axios instance (base URL & auth header)
-│       ├── components/
-│       │   ├── Layout.jsx      # Sidebar & dashboard layout
-│       │   └── ProtectedRoute.jsx # Route guard for logged-in admins
-│       ├── context/
-│       │   └── AuthContext.jsx # Authentication state management
-│       └── pages/
-│           ├── DashboardHome.jsx
-│           ├── LoginPage.jsx
-│           ├── ProductsPage.jsx
-│           ├── ProductFormPage.jsx
-│           ├── OrdersPage.jsx
-│           ├── ServicePackagesPage.jsx
-│           ├── ServicePackageFormPage.jsx
-│           ├── ServiceRequestsPage.jsx
-│           └── UsersPage.jsx   # User list, role management & deletion
-│
-└── lib/                        # Flutter mobile application
-    ├── screens/
-    │   ├── auth/               # Login, registration & profile
-    │   ├── cart/               # Cart, cart state & checkout
-    │   ├── home/               # Home screen & widgets
-    │   ├── product/            # Product listing & details
-    │   ├── services/           # SIM, Fiber & service hub
-    │   └── track/              # Order tracking
-    │
-    └── services/
-        ├── auth_service.dart
-        └── service_api.dart
-```
-
----
-
 ## 🛠️ Tech Stack
 
 | Layer           | Technology                                                             |
@@ -149,7 +93,7 @@ The platform consists of three integrated components working together:
 
 ## 👩‍💻 My Role
 
-I designed and developed this platform **entirely from scratch** during my internship at **Al-Ihab Telecom Services**.
+I developed this platform **entirely from scratch** during my internship at **Al-Ihab Telecom Services**.
 
 I was responsible for the complete development of the system, including:
 
