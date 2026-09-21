@@ -149,93 +149,9 @@ The entire system was designed and implemented by me across all three components
 
 ## 🚀 Getting Started
 
-### Prerequisites
+This project requires a Node.js backend connected to Firebase Firestore, a React admin dashboard, and a Flutter mobile app — each configured to communicate with the backend API. Environment variables, service credentials, and configuration files are intentionally not detailed here, since this was a client project built for **Al-Ihab Telecom Services**.
 
-* Node.js (v18+ recommended)
-* npm
-* A Firebase project with Firestore enabled
-* A Firebase service account key
-* Flutter SDK
-
-### 1. Backend Setup
-
-```bash
-cd backend
-npm install
-```
-
-Create a `.env` file in `backend/` with the following variables:
-
-```env
-PORT=5000
-JWT_SECRET=your_jwt_secret_here
-JWT_EXPIRES_IN=7d
-```
-
-Place your Firebase service account credentials in:
-
-```text
-backend/serviceAccountKey.json
-```
-
-> **Important:** Never commit this file or any real credentials to GitHub.
-
-Run the server:
-
-```bash
-npm start
-```
-
-Or, if configured:
-
-```bash
-npm run dev
-```
-
-The API will be available at:
-
-```text
-http://localhost:5000
-```
-
-### 2. Admin Dashboard Setup
-
-```bash
-cd admin_dashboard
-npm install
-npm run dev
-```
-
-The dashboard will be available at:
-
-```text
-http://localhost:5173
-```
-
-Make sure `src/api/client.js` points to the correct backend base URL, for example:
-
-```text
-http://localhost:5000/api
-```
-
-### 3. Mobile App Setup
-
-From the project root:
-
-```bash
-flutter pub get
-flutter run
-```
-
-Update:
-
-```text
-lib/api_config.dart
-```
-
-with the correct backend base URL before running.
-
-When testing on a physical device, use your computer's local IP address instead of `localhost`.
+> Full setup instructions are available upon request for evaluation or hiring purposes.
 
 ---
 
@@ -245,7 +161,7 @@ When testing on a physical device, use your computer's local IP address instead 
 * Only existing admins can promote another user to `admin` through the Admin Dashboard → Users page.
 * Admins cannot change their own role.
 * Admins cannot delete their own account.
-* All admin-only API routes are protected by `authMiddleware` and `adminMiddleware`.
+* All admin-only API routes are protected by role-based middleware.
 * Passwords are securely hashed using bcrypt.
 * JWTs are used to authenticate protected requests.
 
@@ -253,32 +169,16 @@ When testing on a physical device, use your computer's local IP address instead 
 
 ## 📌 API Overview (Backend)
 
-Base path:
+The backend exposes a RESTful API covering authentication, user management, products, orders, and telecom service requests (SIM and Fiber), with public endpoints for browsing and authenticated/admin-only endpoints for management actions.
 
-```text
-/api
-```
-
-| Route                  | Method       | Access                | Description                              |
-| ----------------------- | ------------ | --------------------- | ---------------------------------------- |
-| `/auth/register`       | POST         | Public                | Create a new customer account            |
-| `/auth/login`          | POST         | Public                | Log in and receive a JWT                 |
-| `/auth/me`             | GET          | Authenticated         | Get current user's profile               |
-| `/auth/users`          | GET          | Admin                 | List all users                           |
-| `/auth/users/:id/role` | PUT          | Admin                 | Change a user's role                     |
-| `/auth/users/:id`      | DELETE       | Admin                 | Delete a user                            |
-| `/products`            | GET/POST/... | Public / Admin        | Product listing & management             |
-| `/orders`              | GET/POST/... | Authenticated / Admin | Order creation, listing & status updates |
-| `/services/*`          | GET/POST/... | Authenticated / Admin | Service packages & requests              |
-
-
+*(Detailed endpoint documentation is available upon request.)*
 
 ---
 
 ## 🔒 Security Notes
 
-* `.env` files and `serviceAccountKey.json` are excluded from version control via `.gitignore`.
-* Never commit real secrets, API keys, Firebase credentials, or private configuration files.
+* Environment files and service credentials are excluded from version control via `.gitignore`.
+* No real secrets, API keys, Firebase credentials, or private configuration files are committed to this repository.
 * Passwords are hashed with bcrypt before being stored.
 * Plaintext passwords are never stored or returned by the API.
 * JWT authentication is required for protected routes.
@@ -288,4 +188,4 @@ Base path:
 
 ## 📄 License
 
-This project was developed entirely by me during my internship at **Al-Ihab Telecom Services** and is shared publicly on GitHub with the company's permission.
+This project was developed entirely by me during my internship at **Al-Ihab Telecom Services** and is shared publicly on GitHub with the company's permission. The underlying system and its intellectual property belong to Al-Ihab Telecom Services; this repository is shared for portfolio and demonstration purposes only, and is not licensed for reuse, redistribution, or derivative work by third parties.
